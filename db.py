@@ -238,7 +238,7 @@ def process(client, message):
     if C=='say' and ranked: sendT(T)
     
     # Source
-    if S==';source' and ranked: sendT('`;; source code` https://github.com/Zeroji/semicolon')
+    if S==';source': sendT('`;; source code` https://github.com/Zeroji/semicolon')
     
     # ROT
     if S.startswith(';rot'):
