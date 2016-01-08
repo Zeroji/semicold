@@ -18,6 +18,43 @@ arg_links = {
     'bots'   :'http://wiki.databutt.com/index.php?title=Bots',
     }
 
+def binint(s):
+    r=0
+    for i in range(len(s)):
+        if s[-i-1]=='1':
+            r+=2**i
+    return r
+
+def decint(s): return int(s)
+
+def hexint(s):
+    s=s.lower()
+    h='0123456789abcdef'
+    r=0
+    for i in range(len(s)):
+        r+=16**i*h.find(s[-i-1])
+    return r
+
+def intbin(x, n=0):
+    r=bin(x)[2:]
+    if len(r)<n:
+        r='0'*(len(r)-n)+r
+    return r
+
+def inthex(x, n=0):
+    r=hex(x)[2:]
+    if len(r)<n:
+        r='0'*(len(r)-n)+r
+    return r
+
+def intdec(x, n=0):
+    r=int(x)
+    if len(r)<n:
+        r='0'*(len(r)-n)+r
+
+def nsplit(s, n):
+    return [s[i:i+n] for i in range(0, len(s), n)]
+
 def rotall(s, lang):
     S=[(rot(s, n), n) for n in range(26)]
     p=[(closeTo(s[0], lang), s[0], s[1]) for s in S]
@@ -39,6 +76,7 @@ def process(client, message):
     A=message.author.name
     T=S[S.find(' ')+1:]
     C=(S[1:] if S.find(' ')<0 else S[1:S.find(' ')]) if len(S)>0 and S[0]==';' else ''
+    
     if S==';;':
         send('''
 ;about                   'bout me.
@@ -57,8 +95,13 @@ def process(client, message):
 ;rot <N> <text>          Uses ROT<N> on <text>.
 ;rot all <text>          Uses ROT1-25 on <text>.
 ;rot <text>              Uses all ROT on text, gives top 3
+;<in><out> <text>        Converts ASCii, BINary, DECimal, HEXadecimal
 ''')
-
+    
+    #
+    if '<@'+client.user.id+'>' in S:
+        send("Hi, ;; here! Type ;; to get a list of my commands.")
+    
     # About
     if C=='about':
         send("Small bot written in Python. Does stuff. Ask Zeroji for more.")
@@ -135,3 +178,18 @@ def process(client, message):
     # Text-to-speech, for ranked members only
     if C=='tts' and ranked:
         sendT(T, True, True)
+
+    # Conversions
+    D=C.lower()
+    if D=='bindec': send(str(binint(T)))
+    if D=='binhex': send(inthex(binint(T)))
+    if D=='decbin': send(intbin(int(T)))
+    if D=='dechex': send(inthex(int(T)))
+    if D=='hexbin': send(intbin(hexint(T)))
+    if D=='hexdec': send(str(hexint(T)))
+    if D=='ascbin': send(' '.join([intbin(ord(c), 8) for c in T]))
+    if D=='aschex': send(' '.join([inthex(ord(c), 2) for c in T]))
+    if D=='ascdec': send(' '.join([str(ord(c)) for c in T]))
+    if D=='decasc': send(''.join([chr(int(x)) for x in T.split()]))
+    if D=='binasc': send(''.join([chr(binint(x)) for x in nsplit(T.replace(' ', ''), 8)]))
+    if D=='hexasc': send(''.join([chr(hexint(x)) for x in nsplit(T.replace(' ', ''), 2)]))
