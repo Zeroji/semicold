@@ -1,0 +1,3 @@
+# ;;
+
+Repository for ;; Discord bot
