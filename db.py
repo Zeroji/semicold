@@ -3,6 +3,11 @@ import time
 from r import rot, closeTo, english
 from random import randint
 
+config = { 'space':True, 'upper':False }
+cfgtyp = { 'space':'B' , 'upper':'B' }
+cfgdsc = { 'space':'Separate chunks for XXXasc conversion',
+           'upper':'Uppercase hexadecimal'}
+
 arg_links = {
     'twitter':'https://twitter.com/UGF0aWVuY2U',
     'reddit' :'https://www.reddit.com/user/1EC7',
@@ -38,22 +43,26 @@ def hexint(s):
 def intbin(x, n=0):
     r=bin(x)[2:]
     if len(r)<n:
-        r='0'*(len(r)-n)+r
+        r='0'*(n-len(r))+r
     return r
 
 def inthex(x, n=0):
     r=hex(x)[2:]
+    if config['upper']: r=r.upper()
     if len(r)<n:
-        r='0'*(len(r)-n)+r
+        r='0'*(n-len(r))+r
     return r
 
 def intdec(x, n=0):
     r=int(x)
     if len(r)<n:
-        r='0'*(len(r)-n)+r
+        r='0'*(n-len(r))+r
 
 def nsplit(s, n):
     return [s[i:i+n] for i in range(0, len(s), n)]
+
+def sfill(s, n):
+    return s+' '*(n-len(s))
 
 def rotall(s, lang):
     S=[(rot(s, n), n) for n in range(26)]
@@ -81,6 +90,7 @@ def process(client, message):
         send('''
 ;about                   'bout me.
 ;bots                    Lists bots.'''+('''
+;config [<var> <value>]  Bot configuration
 ;info <member>           Gives info about member.''' if ranked else '')+'''
 ;link <text>             Links useful things.
 ;links                   List of available links
@@ -118,6 +128,24 @@ def process(client, message):
         print('Reporting in. ('+A+')')
         send("Hi, ;; here. I do stuff. I halp. Type ;; for moar.")
 
+    # Config
+    if S==';config' and ranked:
+        send('\n'.join([cfgtyp[k]+':'+sfill(k,8)+sfill(str(config[k]), 8)+cfgdsc[k] for k in config.keys()]))
+    elif C=='config' and ranked:
+        p=T.split()
+        k,v=p[0], p[1]
+        if k not in config.keys():
+            send("Invalid variable name")
+        elif len(p)!=2:
+            send("Usage: ;config <var> <value>")
+        else:
+            r=None
+            if cfgtyp[k]=='B': r=v in 'TrueTRUEtrue1'
+            if cfgtyp[k]=='I': r=int(v)
+            if cfgtyp[k]=='S': r=s
+            config[k]=r
+            
+    
     # Cookie
     if S==';cookie': sendT(':cookie:')
     
@@ -187,9 +215,9 @@ def process(client, message):
     if D=='dechex': send(inthex(int(T)))
     if D=='hexbin': send(intbin(hexint(T)))
     if D=='hexdec': send(str(hexint(T)))
-    if D=='ascbin': send(' '.join([intbin(ord(c), 8) for c in T]))
-    if D=='aschex': send(' '.join([inthex(ord(c), 2) for c in T]))
-    if D=='ascdec': send(' '.join([str(ord(c)) for c in T]))
+    if D=='ascbin': send((' ' if config['space'] else '').join([intbin(ord(c), 8) for c in T]))
+    if D=='aschex': send((' ' if config['space'] else '').join([inthex(ord(c), 2) for c in T]))
+    if D=='ascdec': send((' ' if config['space'] else '').join([str(ord(c)) for c in T]))
     if D=='decasc': send(''.join([chr(int(x)) for x in T.split()]))
     if D=='binasc': send(''.join([chr(binint(x)) for x in nsplit(T.replace(' ', ''), 8)]))
     if D=='hexasc': send(''.join([chr(hexint(x)) for x in nsplit(T.replace(' ', ''), 2)]))
