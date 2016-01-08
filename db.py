@@ -38,7 +38,7 @@ def process(client, message):
     S=message.content
     A=message.author.name
     T=S[S.find(' ')+1:]
-    C=(S[1:] if S.find(' ')<0 else S[1:S.find(' ')]) if S[0]==';' else ''
+    C=(S[1:] if S.find(' ')<0 else S[1:S.find(' ')]) if len(S)>0 and S[0]==';' else ''
     if S==';;':
         send('''
 ;about                   'bout me.
@@ -109,7 +109,7 @@ def process(client, message):
     if C=='say' and ranked: sendT(T)
 
     # Source
-    if C=='source': sendT('`;; source code` https://github.com/Zeroji/semicolon')
+    if S==';source' and ranked: sendT('`;; source code` https://github.com/Zeroji/semicolon')
     
     # ROT
     if S.startswith(';rot'):
