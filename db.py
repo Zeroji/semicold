@@ -3,6 +3,7 @@ import time
 from r import rot, closeTo, english
 from random import randint
 
+away   = False
 config = { 'space':True, 'upper':False }
 cfgtyp = { 'space':'B' , 'upper':'B' }
 cfgdsc = { 'space':'Separate chunks for XXXasc conversion',
@@ -73,25 +74,47 @@ def rotall(s, lang):
 
 def is_here(): return True
 def process(client, message):
+    global away
     def sendT(text, m=True, t=False):
         client.send_message(message.channel, text, m, t)
     def send(text, m=True, t=False):
         sendT('`'*3+('\n' if '\n' in text else '')+text+'`'*3, m, t)
-    ranked=False
-    for r in message.author.roles:
-        if r.name not in '@everyone Bots':
-            ranked=True
+    def pm(text):
+        client.send_message(message.author, '`'*3+('\n' if '\n' in text else '')+text+'`'*3)
+        
     S=message.content
     A=message.author.name
     T=S[S.find(' ')+1:]
     C=(S[1:] if S.find(' ')<0 else S[1:S.find(' ')]) if len(S)>0 and S[0]==';' else ''
     
+    ranked, private, bot=False, True, False
+    master=message.author.id=='111100569845784576'
+    if type(message.channel)==discord.channel.PrivateChannel: ranked=True
+    else:
+        private=False
+        for r in message.author.roles:
+            if r.name not in '@everyone Bots':
+                ranked=True
+            if r.name=='Bots':
+                bot=True
+    
+    if not away and not private and master and S=='<@'+client.user.id+'> please keep an eye on them ~':
+        sendT('Will do!! \\*-\\*')
+        away=True
+        return
+    if away and not private and master and S=='<@'+client.user.id+'> I\'m back ~':
+        sendT('Yay!! \\*-\\*')
+        away=False
+        return
+    if not private and '<@111100569845784576>' in S and away and not bot:
+        sendT('<@'+message.author.id+'> `Master Zeroji is busy. You can PM him for personal information or use ;request <text> if you would like him to improve my features.`')
+    
     if S==';;':
         send('''
-;about                   'bout me.
-;bots                    Lists bots.'''+('''
-;config [<var> <value>]  Bot configuration
-;info <member>           Gives info about member.''' if ranked else '')+'''
+;about                   'bout me.'''+('''
+;bots                    Lists bots.''' if not private else '')+('''
+;config [<var> <value>]  Bot configuration''' if (ranked and not private) or master else '')+('''
+;info <member>           Gives info about member.''' if ranked and not private else '')+'''
 ;link <text>             Links useful things.
 ;links                   List of available links
 ;lmgtfy <text>           Googles <text> for you.
@@ -103,35 +126,38 @@ def process(client, message):
     if S==';;;':
         send('''
 ;rot <N> <text>          Uses ROT<N> on <text>.
-;rot all <text>          Uses ROT1-25 on <text>.
+;rot all <text>          Uses ROT1-25 on <text>.'''+(' Output via PM.' if not ranked else '')+'''
 ;rot <text>              Uses all ROT on text, gives top 3
 ;<in><out> <text>        Converts ASCii, BINary, DECimal, HEXadecimal
 ''')
     
     #
     if '<@'+client.user.id+'>' in S:
-        send("Hi, ;; here! Type ;; to get a list of my commands.")
+        send("Hi, ;; here! Type ;; to get a list of my commands. PM also works.")
     
     # About
     if C=='about':
-        send("Small bot written in Python. Does stuff. Ask Zeroji for more.")
+        if private:
+            send("Small bot in Python. Does stuff. Here. In private. Just the two of you.")
+        else:
+            send("Small bot in Python. Does stuff. Type ;source or ask Zeroji for more.")
     
     # Bot list
-    if S==';bots':
+    if S==';bots' and not private:
         print('Reporting in, listing the herd. ('+A+')')
-        r="Hi, ;; here. I do stuff. I halp. Type ;; for moar.\nI'm not alone here, you can type !bots to have more information.\nBots detected: "
+        r="Hi, ;; here. I do stuff. I halp. Type ;; for moar. PM also works.\nI'm not alone here, you can type !bots to have more information.\nBots detected: "
         for m in message.channel.server.members:
             if 'Bots' in [x.name for x in m.roles]:
                 r+=m.name+', '
         send(r[:-2])
     elif S[1:]=='bots' and A!=';;':
         print('Reporting in. ('+A+')')
-        send("Hi, ;; here. I do stuff. I halp. Type ;; for moar.")
+        send("Hi, ;; here. I do stuff. I halp. Type ;; for moar. PM also works.")
 
     # Config
-    if S==';config' and ranked:
+    if S==';config' and ((ranked and not private) or master):
         send('\n'.join([cfgtyp[k]+':'+sfill(k,8)+sfill(str(config[k]), 8)+cfgdsc[k] for k in config.keys()]))
-    elif C=='config' and ranked:
+    elif C=='config' and ((ranked and not private) or master):
         p=T.split()
         k,v=p[0], p[1]
         if k not in config.keys():
@@ -144,20 +170,25 @@ def process(client, message):
             if cfgtyp[k]=='I': r=int(v)
             if cfgtyp[k]=='S': r=s
             config[k]=r
+            print(A+' changed '+k+' to '+v)
             
     
     # Cookie
     if S==';cookie': sendT(':cookie:')
     
     # Hugs
-    if S==';hug': sendT("*hugs "+A+"*")
+    if S==';hug':
+        if private: sendT('Oh, '+A+'... you want to get into this? But.. you know we can\'t...')
+        else: sendT("*hugs "+A+"*")
 
     # Info
-    if C=='info' and ranked:
+    if C=='info' and ranked and not private:
         print(A+' asked about '+T)
         for m in message.channel.server.members:
             if m.name==T:
                 send('Member '+T+', roles: '+', '.join([x.name.replace('@everyone', 'Default') for x in m.roles])+' - ID '+m.id)
+    if C=='info' and private:
+        send('Member '+A+' - ID '+message.author.id)
     
     # Links
     if C=='link':
@@ -188,7 +219,12 @@ def process(client, message):
         if text[0]==' ': text=text[1:]
         if text.startswith('all'):
             print(A+' used rotall')
-            send('\n'.join(['ROT'+str(i)+': '+rot(text[4:], i) for i in range(1,26)]))
+            r='\n'.join(['ROT'+str(i)+': '+rot(text[4:], i) for i in range(1,26)])
+            if ranked:
+                send(r)
+            else:
+                sendT('`This command was disabled due to spam. The output was sent to you via PM.`')
+                pm(r)
         elif text[0] in '0123456789':
             i=text.find(' ')
             n=int(text[:i])
@@ -209,6 +245,7 @@ def process(client, message):
 
     # Conversions
     D=C.lower()
+    if len(D)==6 and D[:3] in 'ascbindechex' and D[3:] in 'ascbindechex': print(A+' used '+D)
     if D=='bindec': send(str(binint(T)))
     if D=='binhex': send(inthex(binint(T)))
     if D=='decbin': send(intbin(int(T)))
