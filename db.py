@@ -3,8 +3,10 @@ import discord
 import time
 from r import rot, closeTo, english
 from random import randint
+import urllib.request, exifread
 
 notActuallyOpenSource = open('data/secretCommands').read().splitlines()
+metabot=''
 
 afklist = {p[0]:p[1].split('¨¨') for p in [x.split('::') for x in open('data/afk').read().splitlines()]}
 
@@ -95,6 +97,7 @@ def rotall(s, lang):
 
 def is_here(): return True
 def process(client, message):
+    global metabot
     def sendT(text, m=True, t=False):
         client.send_message(message.channel, text, m, t)
     def send(text, m=True, t=False):
@@ -138,6 +141,7 @@ def process(client, message):
 ;link <text>             Links useful things.
 ;links                   List of available links
 ;lmgtfy <text>           Googles <text> for you.
+;meta <url>              Prints EXIF tags of image.
 ;prime <N>               Returns the <N>th prime.
 ;request <text>          Want to add a feature? It's here.'''+('''
 ;say <text>              Prints <text> (debug purposes)
@@ -326,7 +330,30 @@ After setup is complete you can use ;afk and ;back''')
             print('Exception on '+message.content)
     if C=='links':
         send(', '.join(arg_links.keys()))
-    
+
+    # Meta
+    if C=='meat':
+        sendT('<@'+ID+'> `It\'s okay to mistake metadata for meat. Enjoy your meal.`')
+        C='meta'
+    if S.startswith('$meta '):
+        metabot=T
+    if S=='this feature will be implemented later on' and A=='MetaBot' and metabot!='':
+        C='meta'
+        T=metabot
+        metabot='-'
+    if C=='meta':
+        try:
+            mtb=metabot=='-'
+            if mtb: metabot=''
+            tags=exifread.process_file(open(urllib.request.urlretrieve(T)[0], 'rb'))
+            if len(tags):
+                if mtb: sendT('<@'+ID+'> `You\'re so useless and pathetic. Let me do the work for real.`')
+                send('\n'.join([sfill(tag[:30], 32)+str(tags[tag])[:40] for tag in tags.keys() if tag not in ('JPEGThumbnail', 'TIFFThumbnail', 'Filename', 'EXIF MakerNote')]))
+            else:
+                if mtb: sendT('<@'+ID+'> `Lol you stupid, there wasn\'t even any metadata in that one!`')
+                else: sendT('`No metadata found.`')
+        except:
+            sendT('`An error occured during command execution.`')
     # Ping
     if C=='ping': sendT('pong!' if private else 'Nope.')
     
