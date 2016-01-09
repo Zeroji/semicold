@@ -218,8 +218,13 @@ After setup is complete you can use ;afk and ;back''')
                 elif n==0: sendT("You'll always be notified when someone mentions you.")
                 else: sendT("You'll be notified at most "+str(n)+" times when someone mentions you.")
             if T.startswith('msg'):
-                T=T[4:].replace('http://', 'http:// ').replace('https://', 'https:// ')
-                T=T[:240]
+                T=T[4:]
+                T=T.split(' ')
+                for i in range(len(T)):
+                    if T[i].startswith('http'):
+                        breaklink=True
+                        if breaklink: T[i]=T[i].replace('://', ':// ')
+                T=' '.join(T)[:240]
                 afklist[ID][3]=T
                 sendT('Your AFK message has been set to:\n'+T)
             if T.startswith(notActuallyOpenSource[0]):
