@@ -140,9 +140,10 @@ def process(client, message):
 ;rot <text>              Uses all ROT on text, gives top 3
 ;<in><out> <text>        Converts ASCii, BINary, DECimal, HEXadecimal
 ''')
-    
-    if A=='milton':
-        print(S)
+
+##    if A=='WatcherBot' and S.startswith('Webpage has updates! https://twitter.com'):
+##        client.delete_message(message)
+##        return
     
     #
     if '<@'+client.user.id+'>' in S:
@@ -160,7 +161,7 @@ def process(client, message):
         print('Reporting in, listing the herd. ('+A+')')
         r="Hi, ;; here. I do stuff. I halp. Type ;; for moar. PM also works.\nI'm not alone here, you can type !bots to have more information.\nBots detected: "
         for m in message.channel.server.members:
-            if 'Bots' in [x.name for x in m.roles]:
+            if m.status!='offline' and 'Bots' in [x.name for x in m.roles]:
                 r+=m.name+', '
         send(r[:-2])
     elif S[1:]=='bots' and A!=';;':
@@ -222,7 +223,7 @@ def process(client, message):
         send(', '.join(arg_links.keys()))
     
     # Ping
-    if C=='ping': sendT('Nope.')
+    if C=='ping': sendT('pong!' if private else 'Nope.')
     
     # Prime
     if C=='prime':
