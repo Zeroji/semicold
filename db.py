@@ -134,6 +134,7 @@ def process(client, message):
 ;config [<var> <value>]  Bot configuration''' if (ranked and not private) or master else '')+('''
 ;info <member>           Gives info about member.''' if ranked and not private else '')+'''
 ;isprm <N>               Tells if <N> is a prime number.
+;len <string>        [+] Prints the length of <string>.
 ;link <text>             Links useful things.
 ;links                   List of available links
 ;lmgtfy <text>           Googles <text> for you.
@@ -141,7 +142,6 @@ def process(client, message):
 ;request <text>          Want to add a feature? It's here.'''+('''
 ;say <text>              Prints <text> (debug purposes)
 ;tts <text>              Text-to-speech''' if ranked else '')+'''
-;len <string>            Prints the length of the remaining text, excluding initial space.
 ;;;                      Lists all ciphering commands''')
     
     if S==';;;':
@@ -151,6 +151,9 @@ def process(client, message):
 ;rot <text>              Uses all ROT on text, gives top 3
 ;<in><out> <text>        Converts ASCii, BINary, DECimal, HEXadecimal
 ''')
+
+    if S==';+':
+        sendT('`Commands with a [+] before descriptions are contributed commands.`')
     
     #
     if '<@'+client.user.id+'>' in S:
