@@ -141,6 +141,7 @@ def process(client, message):
 ;request <text>          Want to add a feature? It's here.'''+('''
 ;say <text>              Prints <text> (debug purposes)
 ;tts <text>              Text-to-speech''' if ranked else '')+'''
+;len <string>            Prints the length of the remaining text, excluding initial space.
 ;;;                      Lists all ciphering commands''')
     
     if S==';;;':
@@ -338,6 +339,9 @@ After setup is complete you can use ;afk and ;back''')
     
     # Say
     if C=='say' and ranked: sendT(T)
+    
+    # Length of string
+    if C=='len': sendT(len(T))
     
     # Source
     if S==';source': sendT('`;; source code` https://github.com/Zeroji/semicolon')
