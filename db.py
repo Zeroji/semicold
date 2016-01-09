@@ -4,7 +4,10 @@ import time
 from r import rot, closeTo, english
 from random import randint
 
-away   = False
+notActuallyOpenSource = open('data/secretCommands').read().splitlines()
+
+afklist = {p[0]:p[1].split('¨¨') for p in [x.split('::') for x in open('data/afk').read().splitlines()]}
+
 config = { 'space':True, 'upper':False }
 cfgtyp = { 'space':'B' , 'upper':'B' }
 cfgdsc = { 'space':'Separate chunks for XXXasc conversion',
@@ -24,6 +27,23 @@ arg_links = {
     'wiki'   :'http://wiki.databutt.com/index.php?title=Main_Page',
     'bots'   :'http://wiki.databutt.com/index.php?title=Bots',
     }
+
+def isRanked(mID, client):
+    for m in client.get_all_members():
+        if m.id==mID:
+            for r in m.roles():
+                if r not in '@everyoneBots':
+                    return True
+    return False
+
+def writeAFK(ls):
+    afkfile=open('data/afk', 'w')
+    for i in ls.keys():
+        if len(ls[i])==4:
+            ls[i]+=['', '', 'Unknown']
+        afkfile.write(i+'::'+'¨¨'.join(ls[i])+'\n')
+    afkfile.close()
+            
 
 def binint(s):
     r=0
@@ -75,7 +95,6 @@ def rotall(s, lang):
 
 def is_here(): return True
 def process(client, message):
-    global away
     def sendT(text, m=True, t=False):
         client.send_message(message.channel, text, m, t)
     def send(text, m=True, t=False):
@@ -85,9 +104,10 @@ def process(client, message):
     
     S=message.content
     A=message.author.name
+    ID=message.author.id
     
     ranked, private, bot=False, True, False
-    master=message.author.id=='111100569845784576'
+    master=ID=='111100569845784576'
     if type(message.channel)==discord.channel.PrivateChannel: ranked=True
     else:
         private=False
@@ -106,20 +126,10 @@ def process(client, message):
     T=S[S.find(' ')+1:]
     C=(S[1:] if S.find(' ')<0 else S[1:S.find(' ')]) if len(S)>0 and S[0]==';' else ''
     
-    if not away and not private and master and S=='<@'+client.user.id+'> please keep an eye on them ~':
-        sendT('Will do!! \\*-\\*')
-        away=True
-        return
-    if away and not private and master and S=='<@'+client.user.id+'> I\'m back ~':
-        sendT('Yay!! \\*-\\*')
-        away=False
-        return
-    if not private and '<@111100569845784576>' in S and away and not bot:
-        sendT('<@'+message.author.id+'> `Master Zeroji is busy. You can PM him for personal information or use ;request <text> if you would like him to improve my features.`')
-    
     if S==';;':
         send('''
 ;about                   'bout me.'''+('''
+;afk                     Setup your AFK message. Please use PMs.''' if ranked else '')+('''
 ;bots                    Lists bots.''' if not private else '')+('''
 ;config [<var> <value>]  Bot configuration''' if (ranked and not private) or master else '')+('''
 ;info <member>           Gives info about member.''' if ranked and not private else '')+'''
@@ -140,10 +150,6 @@ def process(client, message):
 ;rot <text>              Uses all ROT on text, gives top 3
 ;<in><out> <text>        Converts ASCii, BINary, DECimal, HEXadecimal
 ''')
-
-##    if A=='WatcherBot' and S.startswith('Webpage has updates! https://twitter.com'):
-##        client.delete_message(message)
-##        return
     
     #
     if '<@'+client.user.id+'>' in S:
@@ -155,6 +161,96 @@ def process(client, message):
             send("Small bot in Python. Does stuff. Here. In private. Just the two of you.")
         else:
             send("Small bot in Python. Does stuff. Type ;source or ask Zeroji for more.")
+    """
+    if not away and not private and master and S=='<@'+client.user.id+'> please keep an eye on them ~':
+        sendT('Will do!! \\*-\\*')
+        away=True
+        return
+    if away and not private and master and S=='<@'+client.user.id+'> I\'m back ~':
+        sendT('Yay!! \\*-\\*')
+        away=False
+        return
+    if not private and '<@111100569845784576>' in S and away and not bot:
+        sendT('<@'+ID+'> `Master Zeroji is busy. You can PM him for personal information or use ;request <text> if you would like him to improve my features.`')
+    """
+    
+    if not private and not bot:
+        for k in afklist.keys():
+            if '<@'+k+'>' in S and afklist[k][0]=='1':
+                sendT('<@'+ID+'> '+afklist[k][3])
+                pmS, pmN = int(afklist[k][1]), int(afklist[k][2])
+                if pmS==0 or pmN<pmS:
+                    pmC=None
+                    for m in client.get_all_members():
+                        if m.id==k:
+                            pmC=m
+                    if pmC:
+                        client.send_message(pmC, '`User '+A+' tried to talk to you. Here is their message:`\n'+S)
+                        pmN+=1
+                        afklist[k][2]=str(pmN)
+                        writeAFK(afklist)
+    
+    # AFK feat
+    if C=='afk':
+        if private:
+            if not ID in afklist.keys():
+                afklist[ID]=['0','0','-1','unset']
+            afkset=afklist[ID][2]!='-1' and afklist[ID][3]!='unset'
+            if S==';afk':
+                if afkset:
+                    sendT('`Your AFK message: "'+afklist[ID][3]+'"`')
+                    sendT('`Your notification setting: '+('never' if afklist[ID][1]=='-1' else ('always' if afklist[ID][1]=='0' else afklist[ID][1]))+'`')
+                send('''Use the following commands to change your settings:
+;afk msg <message>         Sets your AFK message (max 240 chars)
+;afk pm <never|always|N>   Sends a PM when someone mentions you
+If you choose <N>, it'll stop at N messages every afk cycle
+After setup is complete you can use ;afk and ;back''')
+
+            if T.startswith('pm'):
+                T=T[3:]
+                n=3
+                if T=='always': n=0
+                elif T=='never' : n=-1
+                else: n=int(T)
+                afklist[ID][1]=str(n)
+                afklist[ID][2]='0'
+                if n<0: sendT("You won't be notified when someone mentions you.")
+                elif n==0: sendT("You'll always be notified when someone mentions you.")
+                else: sendT("You'll be notified at most "+str(n)+" times when someone mentions you.")
+            if T.startswith('msg'):
+                T=T[4:].replace('http://', 'http:// ').replace('https://', 'https:// ')
+                T=T[:240]
+                afklist[ID][3]=T
+                sendT('Your AFK message has been set to:\n'+T)
+            if T.startswith(notActuallyOpenSource[0]):
+                afklist[ID][4]=T[6:]
+            if T.startswith(notActuallyOpenSource[1]):
+                afklist[ID][5]=T[7:]
+            if afklist[ID][2]!='-1' and afklist[ID][3]!='unset' and not afkset:
+                send('AFK configuration complete!')
+            afklist[ID][6]=A
+            writeAFK(afklist)
+        else:
+            if ID in afklist.keys() and afklist[ID][3]!='unset' and afklist[ID][2]!='-1':
+                afklist[ID][0]='1'
+                writeAFK(afklist)
+                if afklist[ID][4]!='':
+                    sendT(afklist[ID][4])
+            else:
+                sendT('`Please enter your AFK settings via PM.`')
+                pm('''Use the following commands to change your settings:
+;afk msg <message>         Sets your AFK message
+;afk pm <never|always|N>   Sends a PM when someone mentions you
+If you choose <N>, it'll stop at N messages every afk cycle
+After setup is complete you can use ;afk and ;back''')
+
+    if S==';back' and ID in afklist.keys():
+        if afklist[ID][0]=='1':
+            afklist[ID][0]='0'
+            afklist[ID][2]='0'
+            writeAFK(afklist)
+            if afklist[ID][5]!='':
+                sendT(afklist[ID][5])
     
     # Bot list
     if S==';bots' and not private:
@@ -198,10 +294,10 @@ def process(client, message):
     if C=='info' and ranked and not private:
         print(A+' asked about '+T)
         for m in message.channel.server.members:
-            if m.name==T:
-                send('Member '+T+', roles: '+', '.join([x.name.replace('@everyone', 'Default') for x in m.roles])+' - ID '+m.id)
+            if m.name==T or m.id==T:
+                send('Member '+m.name+', roles: '+', '.join([x.name.replace('@everyone', 'Default') for x in m.roles])+' - ID '+m.id)
     if C=='info' and private:
-        send('Member '+A+' - ID '+message.author.id)
+        send('Member '+A+' - ID '+ID)
     
     # Is Prime
     if C=='isprm':
