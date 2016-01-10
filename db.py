@@ -383,6 +383,20 @@ After setup is complete you can use ;afk and ;back''')
                     send(xmp_str)
         except:
             sendT('`An error occured during command execution.`')
+    
+    # No spaces
+    if C=='nospace': sendT('`'+T.replace(' ', '')+'`')
+    if C=='unspace' and len([0 for c in T if c==' '])<len(T):
+        while len([0 for c in T if c==' '])>0.4*len(T):
+            r=''
+            l=T[0]
+            for i in range(len(T)):
+                c=T[i]
+                if c!=' ' or l==' ': r+=c
+                l=c
+            T=r
+        send(r)
+    
     # Ping
     if C=='ping': sendT('pong!' if private else 'Nope.')
     
