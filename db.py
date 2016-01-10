@@ -193,7 +193,7 @@ def process(client, message):
                         if m.id==k:
                             pmC=m
                     if pmC:
-                        client.send_message(pmC, '`User '+A+' tried to talk to you. Here is their message:`\n'+S)
+                        client.send_message(pmC, '`User '+A+' tried to talk to you. Here is their message:`\n'+S.replace('<@'+k+'>', '@'+afklist[k][6]))
                         pmN+=1
                         afklist[k][2]=str(pmN)
                         writeAFK(afklist)
@@ -202,7 +202,9 @@ def process(client, message):
     if C=='afk':
         if private:
             if not ID in afklist.keys():
-                afklist[ID]=['0','0','-1','unset']
+                afklist[ID]=['0','0','-1','unset','','',A]
+            if len(afklist[ID])==4:
+                afklist[ID]+=['', '', A]
             afkset=afklist[ID][2]!='-1' and afklist[ID][3]!='unset'
             if S==';afk':
                 if afkset:
@@ -352,6 +354,33 @@ After setup is complete you can use ;afk and ;back''')
             else:
                 if mtb: sendT('<@'+ID+'> `Lol you stupid, there wasn\'t even any metadata in that one!`')
                 else: sendT('`No metadata found.`')
+        except:
+            sendT('`An error occured during command execution.`')
+
+    # XMP metadata
+    if C=='meta_xmp':
+        try:
+            print('opening bin')
+            binfile=open(urllib.request.urlretrieve(T)[0], 'rb').read()
+            print('stringing')
+            strfile=''.join([chr(x) for x in binfile])
+            print('searching')
+            xmp_start=strfile.find('<x:xmpmeta')
+            xmp_end =strfile.find('</x:xmpmeta>')
+            if xmp_start<0:
+                sendT('`No XMP metadata found.`')
+            elif xmp_end<0:
+                sendT('`No XMP meta end tag found!`')
+            else:
+                print('extracting')
+                xmp_str = binfile[xmp_start:xmp_end+12].decode('utf-8')
+                print('sending')
+                if len(xmp_str)>1200:
+                    sendT('`XMP metadata exceeds 1200 bytes. Printing first 400 and last 400 bytes.`')
+                    send(xmp_str[:400])
+                    send(xmp_str[-400:])
+                else:
+                    send(xmp_str)
         except:
             sendT('`An error occured during command execution.`')
     # Ping
