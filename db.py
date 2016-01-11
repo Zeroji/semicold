@@ -6,6 +6,10 @@ import exifread
 from array import array
 import hashlib
 
+
+def stime():
+    return time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime())
+
 primes = array('I')
 primes.fromstring(open('data/primes', 'rb').read())
 
@@ -15,6 +19,7 @@ metabot = ''
 urls = '''http://pastebin.com/raw/Yf6dfuPT
 https://raw.githubusercontent.com/7879/11.9/master/README.md
 http://pastebin.com/raw/bw9V8Stw
+http://178.62.165.216/76244599.html
 http://104.131.44.161/fb53e74812173ad71c276f4bcc362505445be1948c817c37795171afc2eccf10.html
 http://104.131.44.161/6469693230.html
 http://104.131.44.161/'''.split('\n')
