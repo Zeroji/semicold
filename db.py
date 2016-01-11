@@ -384,7 +384,7 @@ After setup is complete you can use ;afk and ;back''')
 
     # Calc
     if C == 'calc':
-        sendT('`' + db_math.calc(T) + '`')
+        sendT('`' + str(db_math.calc(T)) + '`')
 
     # Config
     if S == ';config' and ((ranked and not private) or master):

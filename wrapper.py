@@ -35,7 +35,7 @@ def on_message(message):
 
     # Update check
     edit_time = os.stat('db.py')[8]
-    if edit_time > last_update or (S == 'RLD' and ID == masterID):
+    if edit_time > last_update or (S == 'RLD' and ID in admins):
         try:
             print(db.stime() + ' reloading db.py')
             last_update = edit_time
