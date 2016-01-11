@@ -5,6 +5,7 @@ import urllib.request
 import exifread
 from array import array
 import hashlib
+import db_math
 
 
 def stime():
@@ -380,6 +381,10 @@ After setup is complete you can use ;afk and ;back''')
     elif S[1:] == 'bots' and A != ';;':
         print('Reporting in. (' + A + ')')
         send("Hi, ;; here. I do stuff. I halp. Type ;; for moar. PM also works.")
+
+    # Calc
+    if C == 'calc':
+        sendT('`' + db_math.calc(T) + '`')
 
     # Config
     if S == ';config' and ((ranked and not private) or master):
