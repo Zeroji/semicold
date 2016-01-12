@@ -12,6 +12,8 @@ primesData.close()
 
 def calc(s):
     """Evaluate the mathematical expression contained in a string."""
+    # (a)cos/sin/tan(h) atan2 degrees radoa,s
+    # exp log log2 log10 factorial sqrt e pi floor int
     allowedMath = ['acos', 'acosh', 'asin', 'asinh', 'atan', 'atan2', 'atanh',
                    'cos', 'cosh', 'degrees', 'exp', 'factorial', 'floor',
                    'log', 'log2', 'log10', 'radians', 'sin', 'sinh', 'sqrt',
@@ -23,7 +25,8 @@ def calc(s):
     math.pi  # dummy statement to avoid F401 (flake8)
     while i < len(s):
         c = s[i]
-        if c in ascii_lowercase:
+        # Supports binary (0b), octal (0o) and hexadecimal (0x)
+        if c in ascii_lowercase and c not in 'obx':
             func, j = c, i + 1
             while j < len(s) and s[j] in ascii_lowercase + digits:
                 func += s[j]
