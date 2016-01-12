@@ -6,6 +6,7 @@ import exifread
 from array import array
 import hashlib
 import db_math
+from base64 import b64encode, b64decode
 
 
 def stime():
@@ -246,7 +247,7 @@ def process(client, message):
 ;rot <N> <text>          Uses ROT<N> on <text>.
 ;rot all <text>          Uses ROT1-25 on <text>.''' + (' Output via PM.' if not ranked else '') + '''
 ;rot <text>              Uses all ROT on text, gives top 3
-;<in><out> <text>        Converts ASCii, BINary, DECimal, HEXadecimal
+;<in><out> <text>        Converts ASCii, BINary, DECimal, HEXadecimal, Base64 (B64)
 ''')
 
     if C == 'urls':
@@ -604,8 +605,10 @@ After setup is complete you can use ;afk and ;back''')
 
     # Conversions
     D = C.lower()
-    if len(D) == 6 and D[:3] in 'ascbindechex' and D[3:] in 'ascbindechex':
+    if len(D) == 6 and D[:3] in 'ascbindechexb64' and D[3:] in 'ascbindechexb64':
         print(A + ' used ' + D)
+    if D[:3] == 'b64':
+        T=T.replace('-','+').replace('_','/')
     if D == 'bindec':
         send(str(binint(T)))
     if D == 'binhex':
@@ -620,22 +623,30 @@ After setup is complete you can use ;afk and ;back''')
         send(str(hexint(T)))
     if D == 'ascbin':
         send((' ' if config['space'] else '').join([intbin(ord(c), 8) for c in T]))
-    if D == 'aschex':
-        send((' ' if config['space'] else '').join([inthex(ord(c), 2) for c in T]))
     if D == 'ascdec':
         send(' '.join([str(ord(c)) for c in T]))
-    if D == 'decasc':
-        send(''.join([chr(int(x)) for x in T.split()]))
+    if D == 'aschex':
+        send((' ' if config['space'] else '').join([inthex(ord(c), 2) for c in T]))
     if D == 'binasc':
         send(''.join([chr(binint(x)) for x in nsplit(T.replace(' ', ''), 8)]))
+    if D == 'decasc':
+        send(''.join([chr(int(x)) for x in T.split()]))
     if D == 'hexasc':
         send(''.join([chr(hexint(x)) for x in nsplit(T.replace(' ', ''), 2)]))
-
-    # B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_ = '
-#
-#    if C=='base64':
-#        alpha = False
-#        for c in T:
-#            if not c in B:
-#                alpha = True
-#
+    if D == 'ascb64':
+        send(b64encode(bytes(T, 'utf-8'), '-_').decode('ascii'))
+    if D == 'binb64':
+        send(b64encode([binint(x) for x in nsplit(T.replace(' ', ''), 8)]).decode('ascii'))
+    if D == 'decb64':
+        send(b64encode([int(x) for x in T.split()]).decode('ascii')
+    if D == 'hexb64':
+        send(b64encode([hexint(x) for x in nsplit(T.replace(' ', ''), 2)]).decode('ascii'))
+    if D == 'b64asc':
+        send(b64decode(T).decode('utf-8')
+    if D == 'b64bin':
+        send((' ' if config['space'] else '').join([intbin(x, 8) for x in b64decode(T)]))
+    if D == 'b64dec':
+        send(' '.join([int(x) for x in b64decode(T)]))
+    if D == 'b64hex':
+        send((' ' if config['space'] else '').join([inthex(x, 2) for x in b64decode(T)]))
+    
