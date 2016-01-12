@@ -7,6 +7,7 @@ from array import array
 import hashlib
 import math_
 from base64 import b64encode, b64decode
+import threading
 
 
 def stime():
@@ -164,24 +165,29 @@ def is_here():
     return True
 
 
-def process(client, message):
-    global md, ttt
-    global metabot
-    if time.time() > ttt:
-        ttt = time.time() + 30
-        for i in range(len(urls)):
-            try:
-                m = hashlib.md5(urllib.request.urlopen(urls[i], None, 0.5).read()).hexdigest()
-                if md[i] == '':
-                    md[i] = m
-                if m != md[i]:
-                    md[i] = m
-                    for c in client.get_all_channels():
-                        if c.name == 'development':
-                            client.send_message(c, 'update on ' + urls[i])
-            except:
-                pass
+def watcher(client):
+    global md
+    threading.Timer(30, watcher, client).start()
+    print('check')
+    for i in range(len(urls)):
+        try:
+            print('check '+urls[i])
+            m = hashlib.md5(urllib.request.urlopen(urls[i], None, 2).read()).hexdigest()
+            print('      '+m,md[i])
+            if md[i] == '':
+                md[i] = m
+            if m != md[i]:
+                md[i] = m
+                print('update')
+                for c in client.get_all_channels():
+                    if c.name == 'development':
+                        client.send_message(c, 'update on ' + urls[i])
+        except:
+            pass
 
+
+def process(client, message):
+    global metabot
     def sendT(text, m=True, t=False):
         client.send_message(message.channel, text, m, t)
 

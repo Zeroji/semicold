@@ -81,3 +81,4 @@ def on_ready():
 
 # FINISH HIM!
 client.run()
+db.watcher(client)
