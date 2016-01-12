@@ -634,7 +634,7 @@ After setup is complete you can use ;afk and ;back''')
     if D == 'hexasc':
         send(''.join([chr(hexint(x)) for x in nsplit(T.replace(' ', ''), 2)]))
     if D == 'ascb64':
-        send(b64encode(bytes(T, 'utf-8'), '-_').decode('ascii'))
+        send(b64encode(bytes(T, 'utf-8'), b'-_').decode('ascii'))
     if D == 'binb64':
         send(b64encode([binint(x) for x in nsplit(T.replace(' ', ''), 8)]).decode('ascii'))
     if D == 'decb64':
