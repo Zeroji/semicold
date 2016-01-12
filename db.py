@@ -636,11 +636,11 @@ After setup is complete you can use ;afk and ;back''')
     if D == 'ascb64':
         send(b64encode(bytes(T, 'utf-8'), b'-_').decode('ascii'))
     if D == 'binb64':
-        send(b64encode([binint(x) for x in nsplit(T.replace(' ', ''), 8)]).decode('ascii'))
+        send(b64encode(bytes([binint(x) for x in nsplit(T.replace(' ', ''), 8)])).decode('ascii'))
     if D == 'decb64':
         send(b64encode([int(x) for x in T.split()]).decode('ascii'))
     if D == 'hexb64':
-        send(b64encode([hexint(x) for x in nsplit(T.replace(' ', ''), 2)]).decode('ascii'))
+        send(b64encode(bytes([hexint(x) for x in nsplit(T.replace(' ', ''), 2)])).decode('ascii'))
     if D == 'b64asc':
         send(b64decode(T).decode('utf-8'))
     if D == 'b64bin':
@@ -649,4 +649,3 @@ After setup is complete you can use ;afk and ;back''')
         send(' '.join([int(x) for x in b64decode(T)]))
     if D == 'b64hex':
         send((' ' if config['space'] else '').join([inthex(x, 2) for x in b64decode(T)]))
-    
