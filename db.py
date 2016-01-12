@@ -5,7 +5,7 @@ import urllib.request
 import exifread
 from array import array
 import hashlib
-import db_math
+import math_
 from base64 import b64encode, b64decode
 
 
@@ -385,7 +385,7 @@ After setup is complete you can use ;afk and ;back''')
 
     # Calc
     if C == 'calc':
-        sendT('`' + str(db_math.calc(T)) + '`')
+        sendT('`' + str(math_.calc(T)) + '`')
 
     # Config
     if S == ';config' and ((ranked and not private) or master):
