@@ -8,6 +8,8 @@ import hashlib
 import math_
 from base64 import b64encode, b64decode
 import threading
+import cipher
+import string_
 
 
 def stime():
@@ -166,13 +168,17 @@ def is_here():
 
 
 def watcher(client):
-    global md
-    threading.Timer(30, watcher, client).start()
     print('check')
+    global md
+    threading.Timer(30, watcher, [client]).start()
     for i in range(len(urls)):
+        m = None
         try:
             print('check '+urls[i])
             m = hashlib.md5(urllib.request.urlopen(urls[i], None, 2).read()).hexdigest()
+        except:
+            pass
+        else:
             print('      '+m,md[i])
             if md[i] == '':
                 md[i] = m
@@ -182,8 +188,6 @@ def watcher(client):
                 for c in client.get_all_channels():
                     if c.name == 'development':
                         client.send_message(c, 'update on ' + urls[i])
-        except:
-            pass
 
 
 def process(client, message):
@@ -207,7 +211,7 @@ def process(client, message):
     for m in client.get_all_members():
         if m.id == '111100569845784576':
             Master = m
-    if type(message.channel) == discord.channel.PrivateChannel:
+    if message.channel.is_private:
         ranked = True
     else:
         private = False
@@ -259,6 +263,8 @@ def process(client, message):
     if C == 'urls':
         send('\n'.join(urls))
 
+    if C == 'soon':
+        sendT('**soon**'+chr(7488)+chr(7481))
     if S == ';+':
         sendT('`Commands with a [+] before descriptions are contributed commands.`')
 
@@ -369,6 +375,8 @@ After setup is complete you can use ;afk and ;back''')
 If you choose <N>, it'll stop at N messages every afk cycle
 After setup is complete you can use ;afk and ;back''')
 
+    if S == ';ok':
+        sendT('http://i.imgur.com/XtC4At2.jpg')
     if S == ';back' and ID in afklist.keys():
         if afklist[ID][0] == '1':
             afklist[ID][0] = '0'
@@ -418,6 +426,18 @@ After setup is complete you can use ;afk and ;back''')
     if S == ';cookie':
         sendT(':cookie:')
 
+    if S.startswith('Pls make me usefull') and ID == '119804445847584768':
+        sendT('<@'+ID+'> You\'re already so awesome 💗')
+    if S == ';channel':
+        sendT('`Channel #' + message.channel.name + ' - ID '+message.channel.id+'`')
+    if C == 'xkcd':
+        sendT('http://xkcd.com/'+T+'/')
+    if S.startswith(';what'):
+        if 'love' in S or ':heart:' in S or '♥' in S:
+            if message.channel.name == 'general':
+                sendT('`Like a mere robot could explain that kind of stuff. Find an elusive "girl" and ask her.`')
+            else:
+                sendT('?Baby don\'t hurt me')
     # Factor
     if C == 'factor':
         n = int(T)
@@ -578,6 +598,15 @@ After setup is complete you can use ;afk and ;back''')
     if S == ';source':
         sendT('`;; source code` https://github.com/Zeroji/semicolon')
 
+    if C == 'vigenere' or C == 'vigenère':
+        L = T.split(' ', 1)
+        send(cipher.vigenere(L[1], L[0]))
+    if C == ';vigenere' or C == ';vigenère':
+        L = T.split(' ', 1)
+        send( cipher.vigenere(L[1], L[0], True))
+    if C == 'vigbreak':
+        k,t=cipher.vigenere_decrypt(T)
+        sendT('Key: ' + k + '  Text:\n' + string_.copyspaces(t, T))
     # ROT
     if S.startswith(';rot'):
         text = message.content[4:]
@@ -603,7 +632,7 @@ After setup is complete you can use ;afk and ;back''')
     # Let me google that for you
     if C == "lmgtfy":
         print(A + ' googled ' + T)
-        sendT("http://lmgtfy.com/?q = " + '+'.join(T.split()))
+        sendT("http://lmgtfy.com/?q=" + '+'.join(T.split()))
 
     # Text-to-speech, for ranked members only
     if C == 'tts' and ranked:
