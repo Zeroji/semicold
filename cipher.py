@@ -9,10 +9,36 @@ from string import ascii_uppercase as uppercase
 from operator import itemgetter
 
 
-english = ''  #  ngrams.ngram_score(open('english_trigrams.txt'))
+english = ngrams.ngram_score(open('english_trigrams.txt'))
 
 
-@command('rot', reversible=True)
+@command('rot', __name__, reversible=True, usage='[all|<N>] <text>',
+         help='Use Caesar cipher on text.')
+def rot_command(client, message, _):
+    """Apply Caesar cipher to text."""
+    arg = _['P'][1]
+    if arg == 'all':
+        private = _['rank'] == 0 and not _['private']
+        lines = ['ROT' + str(i // 10) + str(i % 10) + ': ' +
+                 rot(_['L'][2], i) for i in range(26)]
+        n = 2000 // len(lines[0])
+        message = ['\n'.join(lines[i:i + n]) for i in range(0, 26, n)]
+        for m in message:
+            _['send'](m, pm=private)
+        if private:
+            _['send']('This command was disabled due to spam.' +
+                      'The output was sent to you via PM.', 1)
+    else:
+        try:
+            n = int(arg)
+            _['send'](rot(_['L'][2], n))
+        except:
+            results = rotall(_['T'], english)
+            lines = ['ROT' + str(i // 10) + str(i % 10) + ': ' +
+                     r for f, r, i in results[:3]]
+            _['send']('\n'.join(lines))
+
+
 def rot(s, n, reverse=False):
     """Encode s with Caesar cipher."""
     if reverse:
@@ -31,7 +57,7 @@ def rot(s, n, reverse=False):
 def rotall(s, fit):
     """Find the Caesar cipher closest to a language."""
     S = [rot(s, n) for n in range(26)]
-    p = [(fit.score(r), r, i) for r, i in enumerate(S)]
+    p = [(fit.score(r), r, i) for i, r in enumerate(S)]
     p.sort()
     return p
 

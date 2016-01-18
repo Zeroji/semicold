@@ -1,5 +1,4 @@
-import discord                  # Discord API
-import time                     # Get time
+"""Core of ;; program."""
 from cmds import cmd, command   # Command dictionary
 import cipher
 
@@ -10,15 +9,20 @@ prefix = ';'
 # cmd['rot'] = [0, None, True, "Rot things", 'send', True, cipher.rot, ('%T',)]
 
 
-@command('help', help='Print this help.')
-def help(client, message, S, ID, A, C, L, T, R):
-    client.send_message(message.channel, 'Halp!')
-
-print(cmd)
-
-
 def process(client, message, admins):
     """Handle commands."""
+    # code = 0 is plaintext
+    # code = 1 is a code line
+    # code = 2 is a code block
+    def reply(text, code=2, pm=False, mentions=True, tts=False):
+        """Reply stuff with some options."""
+        destination = message.author if pm else message.channel
+        if code == 1:
+            text = '`' + text.replace('\n', '') + '``'
+        elif code == 2:
+            text = '`' * 3 + ('\n' if '\n' in text else '') + text + '`' * 3
+        client.send_message(destination, text, mentions, tts)
+
     # S, ID, A contain message, author name, author ID
     # C and T contain command and parameter
     # P contains list of parameters
@@ -69,4 +73,6 @@ def process(client, message, admins):
                 continue
             if bot and not c['botsAllowed']:
                 continue
-            c[0](client, message, S, ID, A, P, L, T, R)
+            c[0](client, message, {'S': S, 'ID': ID, 'A': A, 'P': P, 'L': L,
+                                   'T': T, 'R': R, 'send': reply,
+                                   'private': private, 'rank': rank})
