@@ -4,13 +4,15 @@ import hashlib as hl            # Used for hash functions
 import base64                   # Used for Base64 functions
 from string_ import nsplit      # Used for bin/hex input
 import urllib.request           # Used for http hashes
+from cmds import command        # Command dictionary
 from string import ascii_uppercase as uppercase
 from operator import itemgetter
 
 
-english = ngrams.ngram_score(open('english_trigrams.txt'))
+english = ''  #  ngrams.ngram_score(open('english_trigrams.txt'))
 
 
+@command('rot', reversible=True)
 def rot(s, n, reverse=False):
     """Encode s with Caesar cipher."""
     if reverse:
@@ -146,6 +148,7 @@ def vigenere_decrypt(input, target_freqs=[
         0.06094, 0.06966, 0.00153, 0.00772, 0.04025, 0.02406, 0.06749,
         0.07507, 0.01929, 0.00095, 0.05987, 0.06327, 0.09056, 0.02758,
         0.00978, 0.02360, 0.00150, 0.01974, 0.00074]):
+    """Shamelessly stolen from rosettacode.org."""
     nchars = len(uppercase)
     ordA = ord('A')
     sorted_targets = sorted(target_freqs)
@@ -215,7 +218,6 @@ def vigenere_decrypt(input, target_freqs=[
     r = (chr((c - ord(key[i % best_len]) + nchars) % nchars + ordA)
          for i, c in enumerate(cleaned))
     return (key, "".join(r))
-
 
 
 hashes = {'md5': hl.md5, 'sha1': hl.sha1, 'sha224': hl.sha224,

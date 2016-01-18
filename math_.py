@@ -1,6 +1,7 @@
 """Math module for semicolon."""
 import math                     # Used by eval() in calc()
 from array import array         # Used to get the primes
+from cmds import command        # Command dictionary
 from string import ascii_lowercase, ascii_uppercase, digits
 
 # Fetching prime list

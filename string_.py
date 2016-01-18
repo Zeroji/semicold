@@ -1,4 +1,5 @@
 """String module for semicolon."""
+from cmds import command        # Command dictionary
 
 
 def nsplit(s, n):
@@ -34,7 +35,7 @@ def unspace(s):
 
 
 def copyspaces(s, sp):
-    """Insert spaces from sp into the string"""
+    """Insert spaces from sp into the string."""
     if isinstance(sp, str):
         sp = [len(x) for x in sp.split()]
     r = ''
@@ -42,5 +43,3 @@ def copyspaces(s, sp):
         r += s[:n] + ' '
         s = s[n:]
     return r + s
-
-print(eval('copyspaces('+input('>')+')'))
