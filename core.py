@@ -1,12 +1,22 @@
 """Core of ;; program."""
 from cmds import cmd, command   # Command dictionary
+import chat
 import cipher
+import image
+import math_
+import string_
+import watcher
 
 prefix = ';'
 
 # command: min/max rank, channel B/W list, private
 
 # cmd['rot'] = [0, None, True, "Rot things", 'send', True, cipher.rot, ('%T',)]
+
+command('source', __name__, help='Sauce!')(
+    lambda _: _['send']('`;; source code` http://github.com/Zeroji/semicolon'))
+
+print('`' + '`, `'.join(cmd) + '`')
 
 
 def process(client, message, admins):
@@ -18,19 +28,26 @@ def process(client, message, admins):
         """Reply stuff with some options."""
         destination = message.author if pm else message.channel
         if code == 1:
-            text = '`' + text.replace('\n', '') + '``'
+            text = '`' + text.replace('\n', '') + '`'
         elif code == 2:
             text = '`' * 3 + ('\n' if '\n' in text else '') + text + '`' * 3
         client.send_message(destination, text, mentions, tts)
 
     # S, ID, A contain message, author name, author ID
+    S, ID, A = message.content, message.author.id, message.author.name
+    cID = message.channel.id
+
+    # Hacking stuff
+    transforms = ('asc', 'b64', 'bin', 'dec', 'hex', 'utf')
+    if(len(S) > 8 and S[0] == ';' and S[7] == ' ' and
+       S[1:4].lower() in transforms and S[4:7].lower() in transforms):
+        S = ';transform ' + S[1:4] + ' ' + S[4:]
+
     # C and T contain command and parameter
     # P contains list of parameters
     # L contains list of what comes after
     # if you have ;<C> <arg> <arg> <text>
     # then it'll be C P[1] P[2] L[3]
-    S, ID, A = message.content, message.author.id, message.author.name
-    cID = message.channel.id
     C, T, P, L, R = '', '', [], [], False
     if S.startswith(prefix):
         if len(S) > 1 and S[1] == prefix:
@@ -73,6 +90,6 @@ def process(client, message, admins):
                 continue
             if bot and not c['botsAllowed']:
                 continue
-            c[0](client, message, {'S': S, 'ID': ID, 'A': A, 'P': P, 'L': L,
-                                   'T': T, 'R': R, 'send': reply,
-                                   'private': private, 'rank': rank})
+            c[0]({'S': S, 'ID': ID, 'A': A, 'P': P, 'L': L, 'T': T, 'R': R,
+                  'send': reply, 'private': private, 'rank': rank, 'cID': cID,
+                  'client': client, 'message': message})
