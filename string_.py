@@ -2,6 +2,24 @@
 from cmds import command        # Command dictionary
 
 
+@command('nospace', __name__, help='Remove whitespaces from a string.',
+         usage='<text>')
+def nospace_wrapper(_):
+    """Wrapper for nospace function."""
+    _['send'](nospace(_['T']), code=1)
+
+
+@command('unspace', __name__, help='Remove extra whitespaces from a string.',
+         usage='<text>')
+def unspace_wrapper(_):
+    """Wrapper for unspace function."""
+    _['send'](unspace(_['T']), code=1)
+
+
+command('len', __name__, help='Return the length of a string.',
+        usage='<text>')(lambda _: _['send'](str(len(_['T'])), code=0))
+
+
 def nsplit(s, n):
     """Split a string in chunks of n characters."""
     return [s[i:i + n] for i in range(0, len(s), n)]
