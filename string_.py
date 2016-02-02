@@ -20,16 +20,6 @@ command('len', __name__, help='Return the length of a string.',
         usage='<text>')(lambda _: _['send'](str(len(_['T'])), code=0))
 
 
-def nsplit(s, n):
-    """Split a string in chunks of n characters."""
-    return [s[i:i + n] for i in range(0, len(s), n)]
-
-
-def sfill(s, n):
-    """Fill a string with spaces to have len(s)==n."""
-    return s + ' ' * (n - len(s))
-
-
 def nospace(s):
     """Remove whitespaces from a string."""
     return s.replace(' ', '')
@@ -61,3 +51,13 @@ def copyspaces(s, sp):
         r += s[:n] + ' '
         s = s[n:]
     return r + s
+
+
+def nsplit(s, n):
+    """Split a string in chunks of n characters."""
+    return [s[i:i + n] for i in range(0, len(s), n)]
+
+
+def sfill(s, n):
+    """Fill a string with spaces to have len(s)==n."""
+    return s + ' ' * (n - len(s))
