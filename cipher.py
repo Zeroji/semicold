@@ -3,18 +3,26 @@ import ngrams                   # Used to check language
 import hashlib as hl            # Used for hash functions
 import base64                   # Used for Base64 functions
 from string_ import nsplit      # Used for bin/hex input
-import urllib.request           # Used for http hashes
+import requests                 # Used for http hashes
 from cmds import command        # Command dictionary
 from string import ascii_uppercase as uppercase
 from operator import itemgetter
 
 
-english = ngrams.ngram_score(open('english_trigrams.txt'))
+def closeTo(s, lang):
+    """Basic frequency analysis to determine language."""
+    s = s.upper()
+    l = [[len([c for c in s if c == d]), d] for d in uppercase]
+    l.sort(reverse=True)
+    close = 0
+    for i in range(10):
+        close += abs(lang.find(l[i][1]) - i) * (26 - i)
+    return close
 
 
-@command('rot', __name__, reversible=True, usage='[all|<N>] <text>',
-         help='Use Caesar cipher on text.')
-def rot_command(client, message, _):
+@command('rot', __name__, help='Use Caesar cipher on text.',
+         reversible=True, usage='[all|<N>] <text>')
+def rot_command(_):
     """Apply Caesar cipher to text."""
     arg = _['P'][1]
     if arg == 'all':
@@ -31,12 +39,47 @@ def rot_command(client, message, _):
     else:
         try:
             n = int(arg)
+            if _['R']:
+                n *= -1
             _['send'](rot(_['L'][2], n))
         except:
-            results = rotall(_['T'], english)
+            results = rotall(_['T'], 'ETAOINSRHDLUCMFYWGPBVKXQJZ')
             lines = ['ROT' + str(i // 10) + str(i % 10) + ': ' +
                      r for f, r, i in results[:3]]
             _['send']('\n'.join(lines))
+
+
+@command('transform', __name__, help='Transform text between bases.',
+         usage='<in> <out> <text>', reversible=True)
+def transform(_):
+    """Wrapper for translate function."""
+    _['send'](translate(_['L'][3], _['P'][1].lower(), _['P'][2].lower(),
+              _['R']))
+
+
+@command('vigenere', __name__, help='Encode with Vigenere cipher.',
+         usage='<key> <text>', reversible=True)
+def vig_wrap(_):
+    """Wrapper for vigenere function."""
+    _['send'](vigenere(_['L'][2], _['P'][1], _['R']))
+
+
+@command('vigbreak', __name__, help='Attempt to break a Vigenere cipher.',
+         usage='<text>')
+def vigbreak(_):
+    """Vigenere cipher breaker."""
+    try:
+        key, out = vigenere_decrypt(_['T'])
+        _['send']('Key: ' + key + '\n' + out)
+    except:
+        pass
+
+
+@command('hash', __name__, help='Compute hash of URL, string or hex (bytes).',
+         usage='<hash> <url|text|hex>')
+def hasher(_):
+    """Wrapper for hash function."""
+    _['send'](gethash(_['L'][2], _['P'][1]))
 
 
 def rot(s, n, reverse=False):
@@ -54,10 +97,10 @@ def rot(s, n, reverse=False):
     return r
 
 
-def rotall(s, fit):
+def rotall(s, lang):
     """Find the Caesar cipher closest to a language."""
     S = [rot(s, n) for n in range(26)]
-    p = [(fit.score(r), r, i) for i, r in enumerate(S)]
+    p = [(closeTo(r, lang), r, i) for i, r in enumerate(S)]
     p.sort()
     return p
 
@@ -86,7 +129,7 @@ def fromDec(s):
 
 def fromHex(s):
     """Convert an hex string to bytes."""
-    x = nsplit(s.replace(' ', ''), 8)
+    x = nsplit(s.lower().replace(' ', ''), 2)
     return bytes([int(n, 16) for n in x])
 
 
@@ -112,7 +155,7 @@ def toBin(x, spacing=True):
 
 def toDec(x):
     """Convert a bytestring to decimal numbers."""
-    return ' '.join([int(n) for n in x])
+    return ' '.join([str(n) for n in x])
 
 
 def toHex(x, spacing=True, upper=False):
@@ -257,12 +300,15 @@ def gethash(s, h='md5'):
     data = b''
     if s.startswith('http'):
         try:
-            data = urllib.request.urlopen(s, None, 2).read()
+            r = requests.get(s, stream=True, timeout=2)
+            if r.raw.header['Content-Length'] > 2**20:
+                return 'Content over 4MB'
+            data = r.raw.read()
         except:
             return 'Error accessing address'
     else:
         try:
-            data = fromHex(s)
+            data = fromHex(s[2 if s.startswith('0x') else 0:])
         except:
-            data = bytes(s, 'utf-8')
+            data = bytes(s[1 if s.startswith('"') else 0:], 'utf-8')
     return hashes[h](data).hexdigest()
