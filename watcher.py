@@ -1,3 +1,4 @@
+"""Monitor URL for changes."""
 import urllib.request           # Open URLs
 import time                     # Timer
 import threading                # Threading
@@ -11,6 +12,7 @@ interval = float(settings[0])
 channels = settings[1:]
 watchout = False
 
+# Started by wrapper
 oniichan = threading.Thread(target=nightswatch, daemon='HELL YEAH')
 
 
@@ -25,6 +27,8 @@ def nightswatch(client):
         time.sleep(loop - time.time())
         loop += interval
 
+command(name='check', minRank=4)(lambda _: check(_['client']))
+
 
 def check(client):
     """Check URLs for changes."""
@@ -34,7 +38,7 @@ def check(client):
     for i, (md5, sha1, url) in enumerate(wf):
         data = b''
         try:
-            data = urllib.request.urlopen(url, None, 2)
+            data = urllib.request.urlopen(url, None, 2).read()
         except:
             pass  # Because we don't really care if it times out.
         md = hashlib.md5(data).hexdigest()
@@ -57,8 +61,32 @@ def check(client):
                 client.send_message(channel, message)
 
 
-@command('urls', help='Prints a list of watched URLs')
-def urls(client, message, _):
+@command('urls', __name__, help='Prints a list of watched URLs')
+def urls(_):
     """List watched URLs."""
-    wf = open(WWF).read.splitlines()
+    wf = open(WWF).read().splitlines()
     _['send']('\n'.join([x.split(' ', 2)[2] for x in wf]))
+
+
+@command('add', __name__, help='Adds an URL to watching list', minRank=2)
+def addurl(_):
+    """Add URL to watchlist."""
+    with open(WWF, 'a') as f:
+        f.write('  ' + _['T'] + '\n')
+
+
+@command('rm', __name__, help='Removes an URL from watching list', minRank=2)
+def rmurl(_):
+    """Remove URL from watchlist."""
+    lines = []
+    print('removing', _['T'])
+    with open(WWF, 'r') as f:
+        for l in f.readlines():
+            if not l[:-1].endswith(_['T']):
+                lines.append(l)
+                print("appending", l)
+    with open(WWF, 'w') as f:
+        for l in lines:
+            f.write(l)
+
+# TODO : `;mute` & `;votemute`, `;addch` & `rmch`
