@@ -29,7 +29,6 @@ oniichan = threading.Thread(target=nightswatch)
 
 def check(client):
     """Check URLs for changes."""
-    print('chk')
     wf = [x.split(' ', 2) for x in open(WWF).read().splitlines() if len(x) > 0]
     updates = []
     rewrite = False
@@ -77,14 +76,16 @@ def urls(_):
     _['send']('\n'.join([x.split(' ', 2)[2] for x in wf]))
 
 
-@command('add', __name__, help='Adds an URL to watching list', minRank=2)
+@command('add', __name__, help='Adds an URL to watching list', minRank=2,
+         usage='<URL>')
 def addurl(_):
     """Add URL to watchlist."""
     with open(WWF, 'a') as f:
         f.write('  ' + _['T'] + '\n')
 
 
-@command('rm', __name__, help='Removes an URL from watching list', minRank=2)
+@command('rm', __name__, help='Removes an URL from watching list',
+         minRank=2, usage='<URL>')
 def rmurl(_):
     """Remove URL from watchlist."""
     lines = []
@@ -97,7 +98,8 @@ def rmurl(_):
             f.write(l + '\n')
 
 
-@command('interval', __name__, minRank=2)
+@command('interval', __name__, help='Set or get the current check interval.',
+         minRank=2, usage='[<value>]')
 def setInterval(_):
     """Command to set/get watcher interval."""
     global interval
@@ -132,7 +134,7 @@ def listChannels(_):
 
 
 @command('addch', __name__, minRank=2, help='Add output channel.',
-         usage='<channel name|channel ID>')
+         usage='<channel name|ID>')
 def addChannel(_):
     """Add a channel to the list of output channels."""
     global channels
@@ -148,7 +150,7 @@ def addChannel(_):
 
 
 @command('rmch', __name__, minRank=2, help='Remove output channel.',
-         usage='<channel name|channel ID>')
+         usage='<channel name|ID>')
 def removeChannel(_):
     """Remove a channel from the list of output channels."""
     global channels
@@ -197,4 +199,4 @@ def watch(_):
     global oniichan
     oniichan = threading.Thread(target=nightswatch, args=(_['client'],))
     oniichan.start()
-    _['send']('Watching.', 1)
+    _['send']('Night gathers, and now my watch begins.', 1)

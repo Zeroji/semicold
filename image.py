@@ -14,7 +14,6 @@ def meta(_):
     if len(_['P']) > 2:
         mask = _['P'][1]
         url = _['L'][2]
-    print('Getting tags `' + mask + '` from', url)
     tags = gettags(url)
     if tags == -2:
         _['send']('Not an image file', code=1)
@@ -32,15 +31,11 @@ def meta(_):
         tagnamelength = sum([len(t) for t in tag.keys()])
         message = '\n'.join([t[:30].ljust(32) + str(tag[t])[:40]
                              for t in tag.keys()])
-        print(-1, len(message))
         if len(message) <= 2000:
             _['send'](message)
         else:
-            print('urgh')
             if tagnamelength >= 1800:
-                print('urgh')
                 if tn > 100:
-                    print('urgh')
                     _['send']('Too many tags! (' + str(tn) + ')', code=1)
                 else:
                     message = 'Found the following ' + str(tn) + ' tags: '
@@ -49,13 +44,11 @@ def meta(_):
                         if len(t) > 1960 // tn - 2:
                             message += '…'
                         message += ', '
-                    print(len(message))
                     _['send'](message[:-2], code=1)
             else:
                 message = 'Found the following ' + str(tn) + ' tags: '
                 for t in tag.keys():
                     message += t + ', '
-                print(0, len(message))
                 _['send'](message[:-2], code=1)
 
 
@@ -126,7 +119,6 @@ class seeker:
 
 def gettags(url):
     """Get EXIF tags from an image given its URL."""
-    print("getting from url", url)
     try:
         data = seeker(url)
         if 'image' not in data.r.headers['Content-Type']:
@@ -142,7 +134,6 @@ def gettags(url):
 
 def getxmp(url):
     """Get XMP metadata from an image given its URL."""
-    print('getting from url', url)
     try:
         data = seeker(url)
         if 'image' not in data.r.headers['Content-Type']:

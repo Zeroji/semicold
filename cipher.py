@@ -49,8 +49,9 @@ def rot_command(_):
             _['send']('\n'.join(lines))
 
 
-@command('transform', __name__, help='Transform text between bases.',
-         usage='<in> <out> <text>', reversible=True)
+@command('transform', __name__,
+         help='Transform text between bases. (asc/utf, bin, dec, hex, b64)',
+         usage='B1 B2 <text>', reversible=True)
 def transform(_):
     """Wrapper for translate function."""
     _['send'](translate(_['L'][3], _['P'][1].lower(), _['P'][2].lower(),
@@ -76,10 +77,10 @@ def vigbreak(_):
 
 
 @command('hash', __name__, help='Compute hash of URL, string or hex (bytes).',
-         usage='<hash> <url|text|hex>')
+         usage='<hash> <data>')
 def hasher(_):
     """Wrapper for hash function."""
-    _['send'](gethash(_['L'][2], _['P'][1]))
+    _['send'](gethash(_['L'][2], _['P'][1]), 1)
 
 
 def rot(s, n, reverse=False):
@@ -300,9 +301,12 @@ def gethash(s, h='md5'):
     data = b''
     if s.startswith('http'):
         try:
-            r = requests.get(s, stream=True, timeout=2)
-            if int(r.raw.header['Content-Length']) > 2**20:
-                return 'Content over 4MB'
+            r = requests.get(s, stream=True, timeout=0.2)
+            try:
+                if int(r.raw.headers['Content-Length']) > 2**20:
+                    return 'Content over 4MB'
+            except:
+                pass
             data = r.raw.read()
         except:
             return 'Error accessing address'
