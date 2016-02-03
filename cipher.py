@@ -301,7 +301,7 @@ def gethash(s, h='md5'):
     if s.startswith('http'):
         try:
             r = requests.get(s, stream=True, timeout=2)
-            if r.raw.header['Content-Length'] > 2**20:
+            if int(r.raw.header['Content-Length']) > 2**20:
                 return 'Content over 4MB'
             data = r.raw.read()
         except:
