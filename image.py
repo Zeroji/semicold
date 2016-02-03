@@ -1,7 +1,6 @@
 """Image processing module for ;; bot."""
 from cmds import command        # Command dictionary
 import exifread                 # EXIF metadata extraction
-from string_ import sfill       # EXIF tags formatting
 from string_ import nsplit      # XMP tags formatting
 import requests                 # Image Fetching
 
@@ -31,7 +30,7 @@ def meta(_):
                 tag[t] = tags[t]
         tn = len(tag.keys())
         tagnamelength = sum([len(t) for t in tag.keys()])
-        message = '\n'.join([sfill(t[:30], 32) + str(tag[t])[:40]
+        message = '\n'.join([t[:30].ljust(32) + str(tag[t])[:40]
                              for t in tag.keys()])
         print(-1, len(message))
         if len(message) <= 2000:
