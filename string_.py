@@ -56,8 +56,3 @@ def copyspaces(s, sp):
 def nsplit(s, n):
     """Split a string in chunks of n characters."""
     return [s[i:i + n] for i in range(0, len(s), n)]
-
-
-def sfill(s, n):
-    """Fill a string with spaces to have len(s)==n."""
-    return s + ' ' * (n - len(s))
