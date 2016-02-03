@@ -27,7 +27,7 @@ def request(_):
     """Log requests from users."""
     with open('data/requests', 'a') as f:
         try:
-            f.write(_['T'], '\n')
+            f.write(_['T'] + '\n')
             _['send']('Your request has been heard.', 1)
         except:
             pass
@@ -38,7 +38,7 @@ def report(_):
     """Log bug reports from users."""
     with open('data/bugs', 'a') as f:
         try:
-            f.write(_['T'], '\n')
+            f.write(_['T'] + '\n')
             _['send']('Thank you for your report.', 1)
         except:
             pass

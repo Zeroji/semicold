@@ -1,5 +1,4 @@
 """Cipher module for semicolon."""
-import ngrams                   # Used to check language
 import hashlib as hl            # Used for hash functions
 import base64                   # Used for Base64 functions
 from string_ import nsplit      # Used for bin/hex input
