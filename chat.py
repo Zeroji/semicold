@@ -6,9 +6,12 @@ import subprocess               # Used by ping
 lenny = '( ͡° ͜ʖ ͡°)'              # Needed for reasons
 
 
-command('channel', __name__, help='Give current channel information.')(
-    lambda _: _['send']('Channel #' + _['message'].channel.name + ' - ID ' +
-                        _['cID'], code=1))
+@command('channel', __name__, help='Give current channel information.')
+def channelInfo(_):
+    """Return channel name/ID."""
+    _['send']('Channel #' +
+              (_['A'] if _['private'] else _['message'].channel.name) +
+              ' - ID ' + _['cID'], code=1)
 
 
 @command('del', __name__, minRank=2, help='Delete last N messages from ;;',
