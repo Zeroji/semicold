@@ -2,7 +2,7 @@
 import discord                  # Discord API wrapper
 import core                     # ;; main source code
 import os                       # Checking for source updates
-from imp import reload          # Reloading source code
+import sys                      # Checking for source updates
 import traceback                # Handling errors
 from cmds import stime          # Had to put it somewhere
 
@@ -40,7 +40,7 @@ def on_message(message):
         try:
             print(stime() + ' reloading core.py')
             last_update = edit_time
-            reload(core)
+            os.execl(sys.executable, *([sys.executable]+sys.argv))
             running = True
         except:
             client.send_message(Master, traceback.format_exc())

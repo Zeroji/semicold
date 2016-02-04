@@ -24,7 +24,7 @@ def nightswatch(client):
 
 
 # Started by wrapper
-oniichan = threading.Thread(target=nightswatch)
+oniichan = threading.Thread(target=nightswatch, daemon=True)
 
 
 def check(client):
