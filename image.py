@@ -1,7 +1,6 @@
 """Image processing module for ;; bot."""
 from cmds import command        # Command dictionary
 import exifread                 # EXIF metadata extraction
-from string_ import nsplit      # XMP tags formatting
 import requests                 # Image Fetching
 
 

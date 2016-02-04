@@ -44,43 +44,6 @@ def report(_):
             pass
 
 
-@command('commands', __name__, help='List all commands available.',
-         usage='[<module>]')
-def commands(_):
-    """List all commands available to the user."""
-    ls = {}
-    for name in cmd.keys():
-        for c in cmd[name]:
-            if access(c, _['rank'], _['private'], _['bot'], _['cID']):
-                if not c['hidden']:
-                    module = c[1]
-                    if module in moduleNames.keys():
-                        module = moduleNames[module]
-                    if module not in ls.keys():
-                        ls[module] = []
-                    ls[module].append((name, c))
-    lk = list(ls.keys())
-    if _['T']:
-        module = _['T']
-        if module not in lk:
-            _['send']('Invalid module name.', 1)
-        else:
-            ls = ls[module]
-            ls.sort()
-            _['send']('\n'.join([((prefix if c['reversible'] else '') +
-                                 prefix + name + ' ' + c['usage']).ljust(26) +
-                                 c['help'] for name, c in ls]))
-    else:
-        lk.sort()
-        for k in lk:
-            ls[k].sort()
-        _['send']('\n'.join([(k + ':').ljust(12) + ' '.join([';' +
-                             c[0] for c in ls[k]]) for k in lk]))
-
-
-print('`' + '`, `'.join(cmd) + '`')
-
-
 def access(c, rank=0, chan='', private=False, bot=False):
     """Tell if one can use a command."""
     if rank < c['minRank']:
@@ -98,6 +61,82 @@ def access(c, rank=0, chan='', private=False, bot=False):
     if not private and c['privateOnly']:
         return False
     return True
+
+
+def commandList(_):
+    """Return a dictionary of commands."""
+    ls = {}
+    for name in cmd.keys():
+        for c in cmd[name]:
+            if access(c, _['rank'], _['private'], _['bot'], _['cID']):
+                if not c['hidden']:
+                    module = c[1]
+                    if module in moduleNames.keys():
+                        module = moduleNames[module]
+                    if module not in ls.keys():
+                        ls[module] = []
+                    ls[module].append((name, c))
+    return ls
+
+
+@command('help', __name__, help='Print help.', usage='[<command>|<module>]')
+def helpCommand(_):
+    """Help about bot, command, or module."""
+    ls = commandList(_)
+    if _['T']:
+        name = _['T']
+        ismodule = True
+        for k in ls.keys():
+            for n, c in ls[k]:
+                if n == name:
+                    ismodule = False
+                    message = 'Command: `' + prefix + n + '`'
+                    if c['reversible']:
+                        message += (' (reversible by calling `' + prefix * 2 +
+                                    name + '`)')
+                    message += ('\nUsage: `' + prefix + name + ' ' +
+                                c['usage'] + '`\n' + c['help'])
+                    _['send'](message, 0)
+        if ismodule:
+            if _['T'] not in ls.keys():
+                _['send']('Invalid module name.', 1)
+                return
+            ls = ls[_['T']]
+            ls.sort()
+            _['send']('\n'.join([((prefix if c['reversible'] else '') +
+                                 prefix + name + ' ' + c['usage']).ljust(28) +
+                                 c['help'] for name, c in ls]))
+    else:
+        _['send']('Hi, I\'m ;; :D I\'m split into several modules,' +
+                  ' you can type `;help <module>` for more information.', 0)
+        _['send']('Here are my modules: `' + '`, `'.join(ls.keys()) + '`', 0)
+
+
+@command('commands', __name__, help='List all commands available.',
+         usage='[<module>]')
+def commands(_):
+    """List all commands available to the user."""
+    ls = commandList(_)
+    lk = list(ls.keys())
+    if _['T']:
+        module = _['T']
+        if module not in lk:
+            _['send']('Invalid module name.', 1)
+        else:
+            ls = ls[module]
+            ls.sort()
+            _['send']('\n'.join([((prefix if c['reversible'] else '') +
+                                 prefix + name + ' ' + c['usage']).ljust(28) +
+                                 c['help'] for name, c in ls]))
+    else:
+        lk.sort()
+        for k in lk:
+            ls[k].sort()
+        _['send']('\n'.join([(k + ':').ljust(12) + ' '.join([';' +
+                             c[0] for c in ls[k]]) for k in lk]))
+
+
+print('`' + '`, `'.join(cmd) + '`')
 
 
 def process(client, message, admins):
