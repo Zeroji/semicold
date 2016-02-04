@@ -23,10 +23,6 @@ def nightswatch(client):
         time.sleep(interval)
 
 
-# Started by wrapper
-oniichan = threading.Thread(target=nightswatch, daemon=True)
-
-
 def check(client):
     """Check URLs for changes."""
     wf = [x.split(' ', 2) for x in open(WWF).read().splitlines() if len(x) > 0]
@@ -185,6 +181,12 @@ def unmute(_):
         _['send']('Watcher unmuted.', 1)
 
 
+def start(client):
+    """Start watching process."""
+    oniichan = threading.Thread(target=nightswatch, args=(client,))
+    oniichan.start()
+
+
 @command('wkill', __name__, minRank=3, help='Effectively kill watcher.')
 def wkill(_):
     """Kill watcher process."""
@@ -196,7 +198,5 @@ def wkill(_):
 @command('watch', __name__, minRank=3, help='Restart watcher thread.')
 def watch(_):
     """Restart watcher thread."""
-    global oniichan
-    oniichan = threading.Thread(target=nightswatch, args=(_['client'],))
-    oniichan.start()
+    start(_['client'])
     _['send']('Night gathers, and now my watch begins.', 1)

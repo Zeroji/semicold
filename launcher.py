@@ -1,85 +1,73 @@
 """Launcher for ;; bot."""
-import discord                  # Discord API wrapper
-import core                     # ;; main source code
 import os                       # Checking for source updates
 import sys                      # Checking for source updates
-import traceback                # Handling errors
+import discord                  # Discord API wrapper
+import core                     # ;; main source code
 from cmds import stime          # Had to put it somewhere
 
 # Fetching login data
-login = open('data/login')
-email = login.readline()[:-1]
-passw = login.readline()[:-1]
-login.close()
+LOGIN_FILE = open('data/login')
+EMAIL = LOGIN_FILE.readline()[:-1]
+PASSW = LOGIN_FILE.readline()[:-1]
+LOGIN_FILE.close()
 
 # Logging in
-client = discord.Client()
-client.login(email, passw)
-email, passw = None, None
+CLIENT = discord.Client()
+CLIENT.login(EMAIL, PASSW)
+EMAIL, PASSW = None, None
 
 # Fetching master/admin data
-masterID = '111100569845784576'
-adminisTRAITORs = open('data/admins')
-admins = adminisTRAITORs.read().splitlines()
-adminisTRAITORs.close()
+MASTER_ID = '111100569845784576'
+ADMIN_FILE = open('data/admins')
+ADMINS = ADMIN_FILE.read().splitlines()
+ADMIN_FILE.close()
 
-Master = None       # discord.Member to PM when necessary
-last_update = os.stat('core.py')[8]     # time since last core.py update
-running = True      # Status
+# Update data
+SOURCES = [f for f in os.listdir('.') if f.endswith('.py')]
+LAST_UPDATED = max([os.stat(f)[8] for f in SOURCES])
+RUNNING = True
 
 
-@client.event
+@CLIENT.event
 def on_message(message):
     """Handle messages from Discord."""
-    global client, last_update, running
-    S, ID, A = message.content, message.author.id, message.author.name
+    global RUNNING
+
+    text, author_id, author = message.content, message.author.id, message.author.name
 
     # Update check
-    edit_time = os.stat('core.py')[8]
-    if edit_time > last_update or (S == 'RLD' and ID in admins):
-        try:
-            print(stime() + ' reloading core.py')
-            last_update = edit_time
-            os.execl(sys.executable, *([sys.executable]+sys.argv))
-            running = True
-        except:
-            client.send_message(Master, traceback.format_exc())
+    sources = [f for f in os.listdir('.') if f.endswith('.py')]
+    edit_time = max([os.stat(f)[8] for f in sources])
 
-    if ID in admins and S == ';masterkill':
-        print(stime() + ' masterkill by ' + A)
-        running = False
-        client.logout()
-        client = None
+    if edit_time > LAST_UPDATED or (text == 'RLD' and author_id in ADMINS):
+        print(stime() + ' reloading')
+        os.execl(sys.executable, *([sys.executable]+sys.argv))
+
+    if author_id in ADMINS and text == ';masterkill':
+        print(stime() + ' masterkill by ' + author)
+        RUNNING = False
+        CLIENT.logout()
         exit(-1)
-    elif ID in admins and S == ';kill':
-        print(stime() + ' killed by ' + A)
-        running = False
-    elif ID in admins and S == ';reload':
-        print(stime() + ' reloaded by ' + A)
-        running = True
-        client.send_message(message.channel, '`Bot reloaded.`')
-    elif running:
-        core.process(client, message, admins)
+    elif author_id in ADMINS and text == ';kill':
+        print(stime() + ' killed by ' + author)
+        RUNNING = False
+    elif author_id in ADMINS and text == ';reload':
+        print(stime() + ' reloaded by ' + author)
+        RUNNING = True
+        CLIENT.send_message(message.channel, '`Bot reloaded.`')
+    elif RUNNING:
+        core.process(CLIENT, message, ADMINS)
 
 
-@client.event
+@CLIENT.event
 def on_ready():
     """Initialize bot."""
-    global Master
-
-    # Finding Master Zeroji
-    for member in client.get_all_members():
-        if member.id == masterID:
-            Master = member
-
     # Taking good habits
-    client.change_status(None, True)
-
+    CLIENT.change_status(None, True)
     try:
-        core.watcher.oniichan._args = (client,)
-        core.watcher.oniichan.start()
-    except:
+        core.watcher.start(CLIENT)
+    except AttributeError:
         print('Error loading watcher.')
 
 # FINISH HIM!
-client.run()
+CLIENT.run()
