@@ -10,6 +10,29 @@ command('channel', __name__, help='Give current channel information.')(
                         _['cID'], code=1))
 
 
+@command('del', __name__, minRank=2, help='Delete last N messages from ;;',
+         usage='<N>')
+def delete(_):
+    """Delete the last N messages from the bot."""
+    def logs(n, last):
+        return _['client'].logs_from(_['message'].channel, n, before=last)
+    last = list(logs(1))[0]
+    try:
+        todo = int(_['T'])
+    except:
+        pass
+    else:
+        while todo:
+            for i, m in logs(100, last):
+                if i == 99:
+                    last = m
+                if m.author.id == _['client'].user.id:
+                    m.delete()
+                    todo -= 1
+                    if not todo:
+                        return
+
+
 @command('channels', __name__, minRank=1, help='List all channel information.')
 def listChannels(_):
     """List channels."""
