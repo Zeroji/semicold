@@ -29,12 +29,12 @@ command('cookie', __name__, help='Give this man a cookie.', hidden=True)(
 
 
 command('hug', __name__, help='For the lonely.', hidden=True, private=False)(
-    lambda _: _['send']('*hugs * <@' + _['ID'] + '>*'))
+    lambda _: _['send']('*hugs ' + _['A'] + '*', 0))
 
 
 command('hug', __name__, help=lenny, hidden=True, privateOnly=True)(
     lambda _: _['send']('Oh, ' + _['A'] + '... you want to get into this?' +
-                        'But.. you know we can\'t...'))
+                        'But.. you know we can\'t...', 0))
 
 
 @command('info', __name__, minRank=1, help='Get member information',

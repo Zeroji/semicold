@@ -19,7 +19,7 @@ moduleNames = {'math_': 'math', 'string_': 'string'}  # Because it's prettier.
 @command('source', __name__, help='Sauce!')
 def source(_):
     """Link to the source."""
-    _['send']('`;; source code` http://github.com/Zeroji/semicolon')
+    _['send']('`;; source code` http://github.com/Zeroji/semicolon', 0)
 
 
 @command('request', __name__, help='Request a feature', usage='<text>')
@@ -63,13 +63,13 @@ def access(c, rank=0, chan='', private=False, bot=False):
     return True
 
 
-def commandList(_):
+def commandList(_, show=False):
     """Return a dictionary of commands."""
     ls = {}
     for name in cmd.keys():
         for c in cmd[name]:
             if access(c, _['rank'], _['private'], _['bot'], _['cID']):
-                if not c['hidden']:
+                if not c['hidden'] or show:
                     module = c[1]
                     if module in moduleNames.keys():
                         module = moduleNames[module]
@@ -89,7 +89,7 @@ def about(_):
 @command('help', __name__, help='Print help.', usage='[<command>|<module>]')
 def helpCommand(_):
     """Help about bot, command, or module."""
-    ls = commandList(_)
+    ls = commandList(_, show=True)
     if _['T']:
         name = _['T']
         ismodule = True
@@ -106,7 +106,7 @@ def helpCommand(_):
                     _['send'](message, 0)
         if ismodule:
             if _['T'] not in ls.keys():
-                _['send']('Invalid module name.', 1)
+                _['send']('Invalid module/command name.', 1)
                 return
             ls = ls[_['T']]
             ls.sort()
