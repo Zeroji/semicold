@@ -86,6 +86,18 @@ def about(_):
                ' Type ;; or ask Zeroji for more.'), 1)
 
 
+@command('bots', __name__, help='Lists bots.', hidden=True)
+def bots(_):
+    """List bots."""
+    r = ('Hi, ;; here. I do stuff. I halp. Type ;; for moar. PM also works.' +
+         '\nI\'m not alone here, you can type !bots to have more information' +
+         '.\nBots detected: ')
+    for m in _['message'].channel.server.members:
+        if m.status != 'offline' and 'Bots' in [x.name for x in m.roles]:
+            r += m.name + ', '
+    _['send'](r[:-2])
+
+
 @command('help', __name__, help='Print help.', usage='[<command>|<module>]')
 def helpCommand(_):
     """Help about bot, command, or module."""
@@ -172,6 +184,10 @@ def process(client, message, admins):
 
     if S == ';;':
         S = ';commands'
+
+    if S == '!bots':
+        reply(('Hi, ;; here. I do stuff. I halp.' +
+               ' Type ;; for moar. PM also works.'), 1)
 
     # C and T contain command and parameter
     # P contains list of parameters
