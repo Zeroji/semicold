@@ -79,6 +79,13 @@ def commandList(_):
     return ls
 
 
+@command('about', __name__, help='About me :3')
+def about(_):
+    """Basic information about me."""
+    _['send'](('Small bot in Python. Does stuff.' +
+               ' Type ;; or ask Zeroji for more.'), 1)
+
+
 @command('help', __name__, help='Print help.', usage='[<command>|<module>]')
 def helpCommand(_):
     """Help about bot, command, or module."""
@@ -107,7 +114,7 @@ def helpCommand(_):
                                  prefix + name + ' ' + c['usage']).ljust(28) +
                                  c['help'] for name, c in ls]))
     else:
-        _['send']('Hi, I\'m ;; :D I\'m split into several modules,' +
+        _['send']('Hi, I\'m ;; :smile: I\'m split into several modules,' +
                   ' you can type `;help <module>` for more information.', 0)
         _['send']('Here are my modules: `' + '`, `'.join(ls.keys()) + '`', 0)
 
@@ -162,6 +169,9 @@ def process(client, message, admins):
     if(len(S) > 8 and S[0] == ';' and S[7] == ' ' and
        S[1:4].lower() in transforms and S[4:7].lower() in transforms):
         S = ';transform ' + S[1:4] + ' ' + S[4:]
+
+    if S == ';;':
+        S = ';commands'
 
     # C and T contain command and parameter
     # P contains list of parameters
