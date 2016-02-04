@@ -36,7 +36,7 @@ def pull(_):
         raise
     else:
         lines = [l.decode('ascii').ljust(80) for l in process.stdout]
-        _['send'](('Executing `git pull` in `semicolon`\n`' +
+        _['send'](('Executing \\`git pull\\` in \\`~/semicolon/\\`\n`' +
                    '`\n`'.join(lines) + '`'), 0)
 
 
