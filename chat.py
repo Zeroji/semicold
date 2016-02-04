@@ -1,5 +1,6 @@
 """Chat module for ;; bot."""
 from cmds import command        # Command dictionary
+from random import randint      # 8ball
 import subprocess               # Used by ping
 
 lenny = '( ͡° ͜ʖ ͡°)'              # Needed for reasons
@@ -14,7 +15,7 @@ command('channel', __name__, help='Give current channel information.')(
          usage='<N>')
 def delete(_):
     """Delete the last N messages from the bot."""
-    def logs(n, last):
+    def logs(n, last=None):
         return _['client'].logs_from(_['message'].channel, n, before=last)
     last = list(logs(1))[0]
     try:
@@ -23,14 +24,32 @@ def delete(_):
         pass
     else:
         while todo:
-            for i, m in logs(100, last):
+            for i, m in enumerate(list(logs(100, last))):
                 if i == 99:
                     last = m
                 if m.author.id == _['client'].user.id:
-                    m.delete()
+                    print('Deleting', m.content)
+                    _['client'].delete_message(m)
                     todo -= 1
                     if not todo:
                         return
+
+
+m8b = {'It is certain', 'It is decidedly so', 'Without a doubt',
+       'Yes, definitely', 'You may rely on it', 'As I see it, yes',
+       'Most likely', 'Outlook good', 'Yes', 'Signs point to yes',
+       'Reply hazy try again', 'Ask again later', 'Better not tell you now',
+       'Cannot predict now', 'Concentrate and ask again', 'Don\'t count on it',
+       'My reply is no', 'My sources say no', 'Outlook not so good',
+       'Very doubtful'}
+
+
+@command('8ball', __name__, help=';8ball should I help them?', hidden=True)
+def mball(_):
+    """."""
+    i = randint(0, len(m8b)-1)
+    t = '[yup]' if i < 10 else '[...]' if i < 15 else '[nah]'
+    _['send'](t + ' ' + m8b[i], 1)
 
 
 @command('channels', __name__, minRank=1, help='List all channel information.')
