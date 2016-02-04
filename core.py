@@ -6,6 +6,7 @@ import image
 import math_
 import string_
 import watcher
+import subprocess
 
 prefix = ';'
 moduleNames = {'math_': 'math', 'string_': 'string'}  # Because it's prettier.
@@ -20,6 +21,23 @@ moduleNames = {'math_': 'math', 'string_': 'string'}  # Because it's prettier.
 def source(_):
     """Link to the source."""
     _['send']('`;; source code` http://github.com/Zeroji/semicolon', 0)
+
+
+@command('pull', __name__, help='Execute `git pull`', minRank=4)
+def pull(_):
+    """Pull source code from github."""
+    process = subprocess.Popen(['git', 'pull'], stdout=subprocess.PIPE)
+    try:
+        process.wait(5)
+    except:
+        _['send']('Runtime error', 1)
+        process.kill()
+        process.wait()
+        raise
+    else:
+        lines = [l.decode('ascii').ljust(80) for l in process.stdout]
+        _['send'](('Executing `git pull` in `semicolon`\n`' +
+                   '`\n`'.join(lines) + '`'), 0)
 
 
 @command('request', __name__, help='Request a feature', usage='<text>')
