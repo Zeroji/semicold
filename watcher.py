@@ -183,7 +183,7 @@ def unmute(_):
 
 def start(client):
     """Start watching process."""
-    oniichan = threading.Thread(target=nightswatch, args=(client,))
+    oniichan = threading.Thread(target=nightswatch, args=(client,), daemon=True)
     oniichan.start()
 
 
