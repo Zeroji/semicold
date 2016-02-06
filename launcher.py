@@ -1,73 +1,88 @@
 """Launcher for ;; bot."""
 import os                       # Checking for source updates
 import sys                      # Checking for source updates
+import asyncio                  # Discord requirement
 import discord                  # Discord API wrapper
 import core                     # ;; main source code
 from cmds import stime          # Had to put it somewhere
 
-# Fetching login data
-LOGIN_FILE = open('data/login')
-EMAIL = LOGIN_FILE.readline()[:-1]
-PASSW = LOGIN_FILE.readline()[:-1]
-LOGIN_FILE.close()
 
-# Logging in
-CLIENT = discord.Client()
-CLIENT.login(EMAIL, PASSW)
-EMAIL, PASSW = None, None
+class Client(discord.Client):
+    """Wrapper around discord.Client class."""
 
-# Fetching master/admin data
-MASTER_ID = '111100569845784576'
-ADMIN_FILE = open('data/admins')
-ADMINS = ADMIN_FILE.read().splitlines()
-ADMIN_FILE.close()
+    def __init__(self, master='', admins=None):
+        """Init client."""
+        discord.Client.__init__(self)
+        self.running = False
+        self.master = master
+        self.admins = admins
+        self.check_updates = True
+        self.sources = []
+        self.last_updated = 0
 
-# Update data
-SOURCES = [f for f in os.listdir('.') if f.endswith('.py')]
-LAST_UPDATED = max([os.stat(f)[8] for f in SOURCES])
-RUNNING = True
+    def update(self, val):
+        """Set the auto-update behavior."""
+        self.check_updates = val
+
+    @asyncio.coroutine
+    def run(self, login, password):
+        """Start the client."""
+        if self.check_updates:
+            self.sources = [f for f in os.listdir('.') if f.endswith('.py')]
+            self.last_updated = max([os.stat(f)[8] for f in self.sources])
+        discord.Client.run(self, login, password)
+
+    @asyncio.coroutine
+    def on_message(self, message):
+        """Handle messages from Discord."""
+        text, author_id, author = message.content, message.author.id, message.author.name
+
+        if self.check_updates:  # Update check
+            edit_time = max([os.stat(f)[8] for f in self.sources])
+            if edit_time > self.last_updated or (text == 'RLD' and author_id in self.admins):
+                print(stime() + ' reloading')
+                os.execl(sys.executable, *([sys.executable]+sys.argv))
+
+        if author_id in self.admins and text == ';masterkill':
+            print(stime() + ' masterkill by ' + author)
+            self.running = False
+            self.client.logout()
+            exit(0)
+        elif author_id in self.admins and text == ';kill':
+            print(stime() + ' killed by ' + author)
+            self.running = False
+        elif author_id in self.admins and text == ';reload':
+            print(stime() + ' reloaded by ' + author)
+            self.running = True
+            self.client.send_message(message.channel, '`Bot reloaded.`')
+        elif self.running:
+            core.process(self.client, message, self.admins)
+
+    @asyncio.coroutine
+    def on_ready(self):
+        """Initialize bot."""
+        # Taking good habits
+        self.change_status(None, True)
+        try:
+            core.watcher.start(self)
+        except AttributeError:
+            print('Error loading watcher.')
 
 
-@CLIENT.event
-def on_message(message):
-    """Handle messages from Discord."""
-    global RUNNING
+def main():
+    """Main function."""
+    # Fetching login data
+    with open('data/login', 'r') as login_file:
+        email = login_file.readline()[:-1]
+        passw = login_file.readline()[:-1]
 
-    text, author_id, author = message.content, message.author.id, message.author.name
+    # Fetching master/admin data
+    master_id = '111100569845784576'
+    with open('data/admins') as admin_file:
+        admins = admin_file.read().splitlines()
 
-    # Update check
-    sources = [f for f in os.listdir('.') if f.endswith('.py')]
-    edit_time = max([os.stat(f)[8] for f in sources])
+    client = Client(master_id, admins)
+    client.run(email, passw)
 
-    if edit_time > LAST_UPDATED or (text == 'RLD' and author_id in ADMINS):
-        print(stime() + ' reloading')
-        os.execl(sys.executable, *([sys.executable]+sys.argv))
-
-    if author_id in ADMINS and text == ';masterkill':
-        print(stime() + ' masterkill by ' + author)
-        RUNNING = False
-        CLIENT.logout()
-        exit(-1)
-    elif author_id in ADMINS and text == ';kill':
-        print(stime() + ' killed by ' + author)
-        RUNNING = False
-    elif author_id in ADMINS and text == ';reload':
-        print(stime() + ' reloaded by ' + author)
-        RUNNING = True
-        CLIENT.send_message(message.channel, '`Bot reloaded.`')
-    elif RUNNING:
-        core.process(CLIENT, message, ADMINS)
-
-
-@CLIENT.event
-def on_ready():
-    """Initialize bot."""
-    # Taking good habits
-    CLIENT.change_status(None, True)
-    try:
-        core.watcher.start(CLIENT)
-    except AttributeError:
-        print('Error loading watcher.')
-
-# FINISH HIM!
-CLIENT.run()
+if __name__ == '__main__':
+    main()
