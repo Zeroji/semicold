@@ -191,7 +191,7 @@ def process(client, message, admins):
 
     if S == '!bots':
         yield from client.send_message(message.channel, ('`Hi, ;; here. I do stuff. I halp.' +
-                                                         ' Type ;; for moar. PM also works.'))
+                                                         ' Type ;; for moar. PM also works.`'))
 
     # C and T contain command and parameter
     # P contains list of parameters
