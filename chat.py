@@ -91,7 +91,7 @@ def info(_):
     targets = _['T'].split(',')
     for target in targets:
         if target[0] == ' ':
-            target = target[0:]
+            target = target[1:]
         if target[-1] == ' ':
             target = target[:-1]
         for m in _['message'].channel.server.members:
