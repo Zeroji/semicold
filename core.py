@@ -32,7 +32,7 @@ def pull(_):
     try:
         process.wait(5)
     except:
-        return Message('Runtime error', 1)
+        return Message('Runtime error')
         process.kill()
         process.wait()
         raise
@@ -59,7 +59,7 @@ def report(_):
     with open('data/bugs', 'a') as f:
         try:
             f.write(_['T'] + '\n')
-            return Message('Thank you for your report.', 1)
+            return Message('Thank you for your report.')
         except:
             pass
 
@@ -138,16 +138,15 @@ def helpCommand(_):
         if ismodule:
             if _['T'] not in ls.keys():
                 return Message('Invalid module/command name.')
-                return
             ls = ls[_['T']]
             ls.sort()
             return Message('\n'.join([((prefix if c['reversible'] else '') +
-                           prefix + name + ' ' + c['usage']).ljust(28) +
-                           c['help'] for name, c in ls]), Message.BLOCK)
+                                      prefix + name + ' ' + c['usage']).ljust(28) +
+                                      c['help'] for name, c in ls]), Message.BLOCK)
     else:
-        return Message('Hi, I\'m ;; :smile: I\'m split into several modules,' +
-                       ' you can type `;help <module>` for more information.', Message.PLAIN)
-        return Message('Here are my modules: `' + '`, `'.join(ls.keys()) + '`', Message.PLAIN)
+        return (Message('Hi, I\'m ;; :smile: I\'m split into several modules,' +
+                        ' you can type `;help <module>` for more information.', Message.PLAIN),
+                Message('Here are my modules: `' + '`, `'.join(ls.keys()) + '`', Message.PLAIN))
 
 
 @command('commands', __name__, help='List all commands available.',
@@ -164,30 +163,19 @@ def commands(_):
             ls = ls[module]
             ls.sort()
             return Message('\n'.join([((prefix if c['reversible'] else '') +
-                           prefix + name + ' ' + c['usage']).ljust(28) +
-                           c['help'] for name, c in ls]), Message.BLOCK)
+                                       prefix + name + ' ' + c['usage']).ljust(28) +
+                                      c['help'] for name, c in ls]), Message.BLOCK)
     else:
         lk.sort()
         for k in lk:
             ls[k].sort()
-        return Message('\n'.join([(k + ':').ljust(12) + ' '.join([';' +
-                       c[0] for c in ls[k]]) for k in lk]), Message.BLOCK)
+        return Message('\n'.join([(k + ':').ljust(12) + ' '.join([';' + c[0] for c in ls[k]])
+                                  for k in lk]), Message.BLOCK)
 
 
 @asyncio.coroutine
 def process(client, message, admins):
     """Handle commands."""
-    # @asyncio.coroutine
-    # def reply(text, code=2, pm=False, tts=False):
-    #     """Reply stuff with some options."""
-    #     destination = message.author if pm else message.channel
-    #     if code == 1:
-    #         text = '`' + text.replace('\n', '') + '`'
-    #     elif code == 2:
-    #         text = '`' * 3 + ('\n' if '\n' in text else '') + text + '`' * 3
-    #     print(destination.name, text)
-    #     yield from client.send_message(destination, text)
-
     # S, ID, A contain message, author name, author ID
     S, ID, A = message.content, message.author.id, message.author.name
     cID = message.channel.id

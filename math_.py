@@ -21,7 +21,7 @@ def calc_command(_):
     if r is None:
         return Message('Over capacity')
     else:
-        return Message(str(r))
+        return Message(r)
 
 
 @command('calcb', __name__, help='Evaluate an expression (binary output).',

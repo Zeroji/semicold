@@ -24,19 +24,13 @@ class Client(discord.Client):
         """Set the auto-update behavior."""
         self.check_updates = val
 
-    # @asyncio.coroutine
     def run(self, login, password):
         """Start the client."""
         if self.check_updates:
             self.sources = [f for f in os.listdir('.') if f.endswith('.py')]
             self.last_updated = max([os.stat(f)[8] for f in self.sources])
         self.running = True
-        discord.Client.run(self, login, password)
-    #
-    # @asyncio.coroutine
-    # def on_message(self, message):
-    #     if message.content == 'answer my call':
-    #         yield from self.send_message(message.channel, 'uhm.. hi?')
+        super(Client, self).run(login, password)
 
     @asyncio.coroutine
     def on_message(self, message):

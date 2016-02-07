@@ -18,7 +18,7 @@ def unspace_wrapper(_):
 
 
 command('len', __name__, help='Return the length of a string.',
-        usage='<text>')(lambda _: Message(str(len(_['T']))))
+        usage='<text>')(lambda _: Message(len(_['T'])))
 
 
 def nospace(s):

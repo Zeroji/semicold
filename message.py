@@ -10,11 +10,11 @@ class Message:
 
     def __init__(self, text, style=LINE, private=False, tts=False, channel=None):
         """Initialize Message."""
-        self.text = text
+        self.text = str(text)
         if style == self.LINE:
-            self.text = '`' + text + '`'
+            self.text = '`' + self.text + '`'
         elif style == self.BLOCK:
-            self.text = '`' * 3 + '\n' + text + '`' * 3
+            self.text = '```\n' + self.text + '```'
         self.private = private
         self.tts = tts
         self.channel = channel

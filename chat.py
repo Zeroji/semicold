@@ -87,14 +87,15 @@ command('hug', __name__, help=lenny, hidden=True, privateOnly=True)(
          usage='<name|ID> ...', private=False)
 def info(_):
     """Give info about members."""
+    output = []
     for target in _['P'][0:]:
         for m in _['message'].channel.server.members:
             if target in (m.name, m.id):
                 roles = ', '.join([r.name for r in m.roles])
                 roles = roles.replace('@everyone', 'Default')
                 roles = roles.replace('Trusted', 'Purple')
-                return Message('Member ' + m.name + ', roles: ' + roles +
-                               ' - ID: ' + m.id)
+                output.append(Message('Member ' + m.name + ', roles: ' + roles + ' - ID: ' + m.id))
+    return output
 
 
 command('lmgtfy', __name__, help='Googles that for you.', usage='<text>')(

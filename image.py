@@ -32,7 +32,7 @@ def meta(_):
         message = '\n'.join([t[:30].ljust(32) + str(tag[t])[:40]
                              for t in tag.keys()])
         if len(message) <= 2000:
-            return Message(message)
+            return Message(message, Message.BLOCK)
         else:
             if tagnamelength >= 1800:
                 if tn > 100:
