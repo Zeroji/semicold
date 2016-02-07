@@ -3,6 +3,7 @@ from cmds import command        # Command dictionary
 from random import randint      # 8ball
 import subprocess               # Used by ping
 from message import Message
+import discord
 
 lenny = '( ͡° ͜ʖ ͡°)'              # Needed for reasons
 
@@ -62,7 +63,7 @@ def listChannels(_):
     channels = []
     maxlength = 0
     for channel in _['message'].channel.server.channels:
-        if channel.type == 'text':
+        if channel.type == discord.ChannelType.text:
             channels.append((channel.position, channel.name, channel.id))
             maxlength = max(maxlength, len(channel.name))
     channels.sort()
