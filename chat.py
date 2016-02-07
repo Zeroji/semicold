@@ -84,11 +84,16 @@ command('hug', __name__, help=lenny, hidden=True, privateOnly=True)(
 
 
 @command('info', __name__, minRank=1, help='Get member information',
-         usage='<name|ID> ...', private=False)
+         usage='<name|ID>, ...', private=False)
 def info(_):
     """Give info about members."""
     output = []
-    for target in _['P'][0:]:
+    targets = _['T'].split(',')
+    for target in targets:
+        if target[0] == ' ':
+            target = target[0:]
+        if target[-1] == ' ':
+            target = target[:-1]
         for m in _['message'].channel.server.members:
             if target in (m.name, m.id):
                 roles = ', '.join([r.name for r in m.roles])
