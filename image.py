@@ -2,6 +2,7 @@
 from cmds import command        # Command dictionary
 import exifread                 # EXIF metadata extraction
 import requests                 # Image Fetching
+from message import Message
 
 
 @command('meta', __name__, help='Get EXIF metadata from an image',
@@ -15,11 +16,11 @@ def meta(_):
         url = _['L'][2]
     tags = gettags(url)
     if tags == -2:
-        _['send']('Not an image file', code=1)
+        return Message('Not an image file')
     elif tags == -1:
-        _['send']('An error occcured while searching for the file', code=1)
+        return Message('An error occcured while searching for the file')
     elif tags == 0:
-        _['send']('No metadata found.', code=1)
+        return Message('No metadata found.')
     else:
         tbl = ('JPEGThumbnail', 'TIFFThumbnail', 'Filename', 'EXIF MakerNote')
         tag = {}
@@ -31,11 +32,11 @@ def meta(_):
         message = '\n'.join([t[:30].ljust(32) + str(tag[t])[:40]
                              for t in tag.keys()])
         if len(message) <= 2000:
-            _['send'](message)
+            return Message(message)
         else:
             if tagnamelength >= 1800:
                 if tn > 100:
-                    _['send']('Too many tags! (' + str(tn) + ')', code=1)
+                    return Message('Too many tags! (' + str(tn) + ')')
                 else:
                     message = 'Found the following ' + str(tn) + ' tags: '
                     for t in tag.keys():
@@ -43,12 +44,12 @@ def meta(_):
                         if len(t) > 1960 // tn - 2:
                             message += '…'
                         message += ', '
-                    _['send'](message[:-2], code=1)
+                    return Message(message[:-2])
             else:
                 message = 'Found the following ' + str(tn) + ' tags: '
                 for t in tag.keys():
                     message += t + ', '
-                _['send'](message[:-2], code=1)
+                return Message(message[:-2])
 
 
 @command('meta_xmp', __name__, minRank=1,
@@ -57,20 +58,22 @@ def metaXMP(_):
     """Wrapper for the XMP metadata function."""
     xmp = getxmp(_['T'])
     if xmp == -2:
-        _['send']('Not an image file', code=1)
+        return Message('Not an image file')
     elif xmp == -1:
-        _['send']('An error occcured while searching for the file', code=1)
+        return Message('An error occcured while searching for the file')
     elif xmp == 0:
-        _['send']('No metadata found.', code=1)
+        return Message('No metadata found.')
     else:
         lines = xmp.replace('> <', '>\n<').replace('://', ':/ /').splitlines()
         message = ''
+        output = []
         for l in lines:
             if len(message + l) > 2000:
-                _['send'](message[:-1])
+                output.append(Message(message[:-1], Message.BLOCK))
                 message = ''
             message += l + '\n'
-        _['send'](message[:-1])
+        output.append(Message(message[:-1], Message.BLOCK))
+        return output
 
 
 class seeker:

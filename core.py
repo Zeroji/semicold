@@ -1,5 +1,7 @@
 """Core of ;; program."""
 from cmds import cmd, command   # Command dictionary
+import asyncio
+from message import Message
 import chat
 import cipher
 import image
@@ -20,7 +22,7 @@ moduleNames = {'math_': 'math', 'string_': 'string'}  # Because it's prettier.
 @command('source', __name__, help='Sauce!')
 def source(_):
     """Link to the source."""
-    _['send']('`;; source code` http://github.com/Zeroji/semicolon', 0)
+    return Message('`;; source code` http://github.com/Zeroji/semicolon', Message.PLAIN)
 
 
 @command('pull', __name__, help='Execute `git pull`', minRank=4)
@@ -30,14 +32,14 @@ def pull(_):
     try:
         process.wait(5)
     except:
-        _['send']('Runtime error', 1)
+        return Message('Runtime error', 1)
         process.kill()
         process.wait()
         raise
     else:
         lines = [l.decode('ascii').ljust(80) for l in process.stdout]
-        _['send'](('Executing \\`git pull\\` in \\`~/semicolon/\\`\n`' +
-                   '`\n`'.join(lines) + '`'), 0)
+        return Message(('Executing \\`git pull\\` in \\`~/semicolon/\\`\n`' +
+                        '`\n`'.join(lines) + '`'), Message.PLAIN)
 
 
 @command('request', __name__, help='Request a feature', usage='<text>')
@@ -46,7 +48,7 @@ def request(_):
     with open('data/requests', 'a') as f:
         try:
             f.write(_['T'] + '\n')
-            _['send']('Your request has been heard.', 1)
+            return Message('Your request has been heard.')
         except:
             pass
 
@@ -57,7 +59,7 @@ def report(_):
     with open('data/bugs', 'a') as f:
         try:
             f.write(_['T'] + '\n')
-            _['send']('Thank you for your report.', 1)
+            return Message('Thank you for your report.', 1)
         except:
             pass
 
@@ -100,8 +102,7 @@ def commandList(_, show=False):
 @command('about', __name__, help='About me :3')
 def about(_):
     """Basic information about me."""
-    _['send'](('Small bot in Python. Does stuff.' +
-               ' Type ;; or ask Zeroji for more.'), 1)
+    return Message('Small bot in Python. Does stuff. Type ;; or ask Zeroji for more.')
 
 
 @command('bots', __name__, help='Lists bots.', hidden=True)
@@ -113,7 +114,7 @@ def bots(_):
     for m in _['message'].channel.server.members:
         if m.status != 'offline' and 'Bots' in [x.name for x in m.roles]:
             r += m.name + ', '
-    _['send'](r[:-2])
+    return Message(r[:-2], Message.BLOCK)
 
 
 @command('help', __name__, help='Print help.', usage='[<command>|<module>]')
@@ -133,20 +134,20 @@ def helpCommand(_):
                                     name + '`)')
                     message += ('\nUsage: `' + prefix + name + ' ' +
                                 c['usage'] + '`\n' + c['help'])
-                    _['send'](message, 0)
+                    return Message(message, Message.PLAIN)
         if ismodule:
             if _['T'] not in ls.keys():
-                _['send']('Invalid module/command name.', 1)
+                return Message('Invalid module/command name.')
                 return
             ls = ls[_['T']]
             ls.sort()
-            _['send']('\n'.join([((prefix if c['reversible'] else '') +
-                                 prefix + name + ' ' + c['usage']).ljust(28) +
-                                 c['help'] for name, c in ls]))
+            return Message('\n'.join([((prefix if c['reversible'] else '') +
+                           prefix + name + ' ' + c['usage']).ljust(28) +
+                           c['help'] for name, c in ls]), Message.BLOCK)
     else:
-        _['send']('Hi, I\'m ;; :smile: I\'m split into several modules,' +
-                  ' you can type `;help <module>` for more information.', 0)
-        _['send']('Here are my modules: `' + '`, `'.join(ls.keys()) + '`', 0)
+        return Message('Hi, I\'m ;; :smile: I\'m split into several modules,' +
+                       ' you can type `;help <module>` for more information.', Message.PLAIN)
+        return Message('Here are my modules: `' + '`, `'.join(ls.keys()) + '`', Message.PLAIN)
 
 
 @command('commands', __name__, help='List all commands available.',
@@ -158,37 +159,34 @@ def commands(_):
     if _['T']:
         module = _['T']
         if module not in lk:
-            _['send']('Invalid module name.', 1)
+            return Message('Invalid module name.')
         else:
             ls = ls[module]
             ls.sort()
-            _['send']('\n'.join([((prefix if c['reversible'] else '') +
-                                 prefix + name + ' ' + c['usage']).ljust(28) +
-                                 c['help'] for name, c in ls]))
+            return Message('\n'.join([((prefix if c['reversible'] else '') +
+                           prefix + name + ' ' + c['usage']).ljust(28) +
+                           c['help'] for name, c in ls]), Message.BLOCK)
     else:
         lk.sort()
         for k in lk:
             ls[k].sort()
-        _['send']('\n'.join([(k + ':').ljust(12) + ' '.join([';' +
-                             c[0] for c in ls[k]]) for k in lk]))
+        return Message('\n'.join([(k + ':').ljust(12) + ' '.join([';' +
+                       c[0] for c in ls[k]]) for k in lk]), Message.BLOCK)
 
 
-print('`' + '`, `'.join(cmd) + '`')
-
-
+@asyncio.coroutine
 def process(client, message, admins):
     """Handle commands."""
-    # code = 0 is plaintext
-    # code = 1 is a code line
-    # code = 2 is a code block
-    def reply(text, code=2, pm=False, mentions=True, tts=False):
-        """Reply stuff with some options."""
-        destination = message.author if pm else message.channel
-        if code == 1:
-            text = '`' + text.replace('\n', '') + '`'
-        elif code == 2:
-            text = '`' * 3 + ('\n' if '\n' in text else '') + text + '`' * 3
-        client.send_message(destination, text, mentions, tts)
+    # @asyncio.coroutine
+    # def reply(text, code=2, pm=False, tts=False):
+    #     """Reply stuff with some options."""
+    #     destination = message.author if pm else message.channel
+    #     if code == 1:
+    #         text = '`' + text.replace('\n', '') + '`'
+    #     elif code == 2:
+    #         text = '`' * 3 + ('\n' if '\n' in text else '') + text + '`' * 3
+    #     print(destination.name, text)
+    #     yield from client.send_message(destination, text)
 
     # S, ID, A contain message, author name, author ID
     S, ID, A = message.content, message.author.id, message.author.name
@@ -204,8 +202,8 @@ def process(client, message, admins):
         S = ';commands'
 
     if S == '!bots':
-        reply(('Hi, ;; here. I do stuff. I halp.' +
-               ' Type ;; for moar. PM also works.'), 1)
+        yield from client.send_message(message.channel, ('`Hi, ;; here. I do stuff. I halp.' +
+                                                         ' Type ;; for moar. PM also works.'))
 
     # C and T contain command and parameter
     # P contains list of parameters
@@ -242,6 +240,11 @@ def process(client, message, admins):
         for c in cmd[C]:
             if not access(c, rank, private, bot, cID):
                 continue
-            c[0]({'S': S, 'ID': ID, 'A': A, 'P': P, 'L': L, 'T': T, 'R': R,
-                  'send': reply, 'private': private, 'rank': rank, 'cID': cID,
-                  'client': client, 'message': message, 'bot': bot})
+            output = c[0]({'S': S, 'ID': ID, 'A': A, 'P': P, 'L': L, 'T': T, 'R': R,
+                           'private': private, 'rank': rank, 'cID': cID,
+                           'client': client, 'message': message, 'bot': bot})
+            if type(output) == Message:
+                output = (output,)
+            for mess in output:
+                yield from client.send_message(mess.get_channel(message.author, message.channel),
+                                               mess.text, tts=mess.tts)

@@ -2,6 +2,7 @@
 from cmds import command        # Command dictionary
 from random import randint      # 8ball
 import subprocess               # Used by ping
+from message import Message
 
 lenny = '( ͡° ͜ʖ ͡°)'              # Needed for reasons
 
@@ -9,9 +10,9 @@ lenny = '( ͡° ͜ʖ ͡°)'              # Needed for reasons
 @command('channel', __name__, help='Give current channel information.')
 def channelInfo(_):
     """Return channel name/ID."""
-    _['send']('Channel #' +
-              (_['A'] if _['private'] else _['message'].channel.name) +
-              ' - ID ' + _['cID'], code=1)
+    return Message('Channel #' +
+                   (_['A'] if _['private'] else _['message'].channel.name) +
+                   ' - ID ' + _['cID'])
 
 
 @command('del', __name__, minRank=2, help='Delete last N messages from ;;',
@@ -52,7 +53,7 @@ def mball(_):
     """."""
     i = randint(0, len(m8b)-1)
     t = '[yup]' if i < 10 else '[...]' if i < 15 else '[nah]'
-    _['send'](t + ' ' + m8b[i], 1)
+    return Message(t + ' ' + m8b[i])
 
 
 @command('channels', __name__, minRank=1, help='List all channel information.')
@@ -65,21 +66,21 @@ def listChannels(_):
             channels.append((channel.position, channel.name, channel.id))
             maxlength = max(maxlength, len(channel.name))
     channels.sort()
-    _['send']('\n'.join(['Channel #' + (c[1] + ' ' * maxlength)[:maxlength] +
-                         ' - ID ' + c[2] for c in channels]))
+    return Message('\n'.join(['Channel #' + (c[1] + ' ' * maxlength)[:maxlength] +
+                   ' - ID ' + c[2] for c in channels]), Message.BLOCK)
 
 
 command('cookie', __name__, help='Give this man a cookie.', hidden=True)(
-    lambda _: _['send'](':cookie:', 0))
+    lambda _: Message(':cookie:', Message.PLAIN))
 
 
 command('hug', __name__, help='For the lonely.', hidden=True, private=False)(
-    lambda _: _['send']('*hugs ' + _['A'] + '*', 0))
+    lambda _: Message('*hugs ' + _['A'] + '*', Message.PLAIN))
 
 
 command('hug', __name__, help=lenny, hidden=True, privateOnly=True)(
-    lambda _: _['send']('Oh, ' + _['A'] + '... you want to get into this?' +
-                        'But.. you know we can\'t...', 0))
+    lambda _: Message('Oh, ' + _['A'] + '... you want to get into this?' +
+                      'But.. you know we can\'t...', Message.PLAIN))
 
 
 @command('info', __name__, minRank=1, help='Get member information',
@@ -92,12 +93,12 @@ def info(_):
                 roles = ', '.join([r.name for r in m.roles])
                 roles = roles.replace('@everyone', 'Default')
                 roles = roles.replace('Trusted', 'Purple')
-                _['send']('Member ' + m.name + ', roles: ' + roles +
-                          ' - ID: ' + m.id, code=1)
+                return Message('Member ' + m.name + ', roles: ' + roles +
+                               ' - ID: ' + m.id)
 
 
 command('lmgtfy', __name__, help='Googles that for you.', usage='<text>')(
-    lambda _: _['send']('http://lmgtfy.com/?q=' + '+'.join(_['P'][1:]), 0))
+    lambda _: Message('http://lmgtfy.com/?q=' + '+'.join(_['P'][1:]), Message.PLAIN))
 
 
 @command('ping', __name__, help='Give ping statistics for a given URL',
@@ -109,20 +110,20 @@ def ping(_):
     process.wait()
     lines = [l.decode('ascii') for l in process.stdout]
     if len(lines) == 5:
-        _['send'](''.join(lines[-2:]))
+        return Message(''.join(lines[-2:]), Message.BLOCK)
 
 
 command('ok', __name__, help='OK.', hidden=True)(
-    lambda _: _['send']('http://i.imgur.com/XtC4At2.jpg', 0))
+    lambda _: Message('http://i.imgur.com/XtC4At2.jpg', Message.PLAIN))
 
 
 command('say', __name__, minRank=1, help='Repeat', usage='<text>')(
-    lambda _: _['send'](_['T'], 0))
+    lambda _: Message(_['T'], Message.PLAIN))
 
 
 command('tts', __name__, minRank=1, help='Text-to-speech', usage='<text>')(
-    lambda _: _['send'](_['T'], 0, tts=True))
+    lambda _: Message(_['T'], Message.PLAIN, tts=True))
 
 
 command('xkcd', __name__, help='xkcd', usage='<N>', hidden=True)(
-    lambda _: _['send']('http://xkcd.com/' + _['T'] + '/', code=0))
+    lambda _: Message('http://xkcd.com/' + _['T'] + '/', Message.PLAIN))

@@ -1,23 +1,24 @@
 """String module for semicolon."""
 from cmds import command        # Command dictionary
+from message import Message
 
 
 @command('nospace', __name__, help='Remove whitespaces from a string.',
          usage='<text>')
 def nospace_wrapper(_):
     """Wrapper for nospace function."""
-    _['send'](nospace(_['T']), code=1)
+    return Message(nospace(_['T']))
 
 
 @command('unspace', __name__, help='Remove extra whitespaces from a string.',
          usage='<text>')
 def unspace_wrapper(_):
     """Wrapper for unspace function."""
-    _['send'](unspace(_['T']), code=1)
+    return Message(unspace(_['T']))
 
 
 command('len', __name__, help='Return the length of a string.',
-        usage='<text>')(lambda _: _['send'](str(len(_['T'])), code=0))
+        usage='<text>')(lambda _: Message(str(len(_['T']))))
 
 
 def nospace(s):

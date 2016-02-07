@@ -4,6 +4,7 @@ import multiprocessing          # Used because of eval() in calc()
 from array import array         # Used to get the primes
 from cmds import command        # Command dictionary
 from string import ascii_lowercase, ascii_uppercase, digits
+from message import Message
 
 # Fetching prime list
 primesData = open('data/primes', 'rb')
@@ -18,9 +19,9 @@ def calc_command(_):
     """Wrapper for the calc command."""
     r = calc(_['T'])
     if r is None:
-        _['send']('Over capacity', code=1)
+        return Message('Over capacity')
     else:
-        _['send'](str(r), code=1)
+        return Message(str(r))
 
 
 @command('calcb', __name__, help='Evaluate an expression (binary output).',
@@ -29,9 +30,9 @@ def calcb_command(_):
     """Wrapper for the calc command (bin)."""
     r = calc(_['T'])
     if r is None:
-        _['send']('Over capacity', code=1)
+        return Message('Over capacity')
     else:
-        _['send'](bin(r).replace('0b', ''), code=1)
+        return Message(bin(r).replace('0b', ''))
 
 
 @command('calco', __name__, help='Evaluate an expression (octal output).',
@@ -40,9 +41,9 @@ def calco_command(_):
     """Wrapper for the calc command (oct)."""
     r = calc(_['T'])
     if r is None:
-        _['send']('Over capacity', code=1)
+        return Message('Over capacity')
     else:
-        _['send'](oct(r).replace('0o', ''), code=1)
+        return Message(oct(r).replace('0o', ''))
 
 
 @command('calcx', __name__, help='Evaluate an expression (hex output).',
@@ -51,9 +52,9 @@ def calcx_command(_):
     """Wrapper for the calc command (hex)."""
     r = calc(_['T'])
     if r is None:
-        _['send']('Over capacity', code=1)
+        return Message('Over capacity')
     else:
-        _['send'](hex(r).replace('0x', ''), code=1)
+        return Message(hex(r).replace('0x', ''))
 
 
 @command('prime', __name__, help='Return the Nth prime number (up to 1e7).',
@@ -63,9 +64,8 @@ def nthprime(_):
     try:
         l = list(map(int, _['P'][1:]))
         if max(l) > len(primes) or min(l) < 1:
-            _['send']('Over capacity')
-            return
-        _['send'](' '.join([str(primes[n - 1]) for n in l]))
+            return Message('Over capacity')
+        return Message(' '.join([str(primes[n - 1]) for n in l]))
     except:
         pass
 
@@ -89,7 +89,7 @@ def isprim(_):
                 pref = ('st', 'nd', 'rd')[i % 10]
             s += ' (' + str(i + 1) + pref + ')'
         answers.append(s)
-    _['send'](' '.join(answers))
+    return Message(' '.join(answers))
 
 
 @command('factor', __name__, help='Factor an integer into primes.',
@@ -107,7 +107,7 @@ def factorize(_):
             u[x] = 0
         u[x] += 1
     f = ' * '.join([str(x) + '^' + str(u[x]) for x in u.keys()]) + ' '
-    _['send'](str(n) + ' = ' + f.replace('^1 ', ' ')[:-1], code=1)
+    return Message(str(n) + ' = ' + f.replace('^1 ', ' ')[:-1])
 
 
 def calc(s):

@@ -6,6 +6,7 @@ import requests                 # Used for http hashes
 from cmds import command        # Command dictionary
 from string import ascii_uppercase as uppercase
 from operator import itemgetter
+from message import Message
 
 
 def closeTo(s, lang):
@@ -30,22 +31,24 @@ def rot_command(_):
                  rot(_['L'][2], i) for i in range(26)]
         n = 2000 // len(lines[0])
         message = ['\n'.join(lines[i:i + n]) for i in range(0, 26, n)]
+        output = []
         for m in message:
-            _['send'](m, pm=private)
+            output.append(Message(m, style=Message.BLOCK, private=private))
         if private:
-            _['send']('This command was disabled due to spam.' +
-                      'The output was sent to you via PM.', 1)
+            output.append(Message('This command was disabled due to spam.' +
+                                  'The output was sent to you via PM.'))
+        return output
     else:
         try:
             n = int(arg)
             if _['R']:
                 n *= -1
-            _['send'](rot(_['L'][2], n))
+            return Message(rot(_['L'][2], n), Message.BLOCK)
         except:
             results = rotall(_['T'], 'ETAOINSRHDLUCMFYWGPBVKXQJZ')
             lines = ['ROT' + str(i // 10) + str(i % 10) + ': ' +
                      r for f, r, i in results[:3]]
-            _['send']('\n'.join(lines))
+            return Message('\n'.join(lines), Message.BLOCK)
 
 
 @command('transform', __name__,
@@ -53,15 +56,15 @@ def rot_command(_):
          usage='B1 B2 <text>', reversible=True)
 def transform(_):
     """Wrapper for translate function."""
-    _['send'](translate(_['L'][3], _['P'][1].lower(), _['P'][2].lower(),
-              _['R']))
+    return Message(translate(_['L'][3], _['P'][1].lower(), _['P'][2].lower(), _['R']),
+                   Message.BLOCK)
 
 
 @command('vigenere', __name__, help='Encode with Vigenere cipher.',
          usage='<key> <text>', reversible=True)
 def vig_wrap(_):
     """Wrapper for vigenere function."""
-    _['send'](vigenere(_['L'][2], _['P'][1], _['R']))
+    return Message(vigenere(_['L'][2], _['P'][1], _['R']), Message.BLOCK)
 
 
 @command('vigbreak', __name__, help='Attempt to break a Vigenere cipher.',
@@ -70,7 +73,7 @@ def vigbreak(_):
     """Vigenere cipher breaker."""
     try:
         key, out = vigenere_decrypt(_['T'])
-        _['send']('Key: ' + key + '\n' + out)
+        return Message('Key: ' + key + '\n' + out, Message.BLOCK)
     except:
         pass
 
@@ -79,7 +82,7 @@ def vigbreak(_):
          usage='<hash> <data>')
 def hasher(_):
     """Wrapper for hash function."""
-    _['send'](gethash(_['L'][2], _['P'][1]), 1)
+    return Message(gethash(_['L'][2], _['P'][1]))
 
 
 def rot(s, n, reverse=False):

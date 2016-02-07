@@ -4,6 +4,7 @@ import time                     # Timer
 import threading                # Threading
 import hashlib                  # Check URLs
 from cmds import command        # Command dictionary
+from message import Message
 
 WWF = 'data/watch'  # Watcher Watch File
 
@@ -69,7 +70,7 @@ def check(client):
 def urls(_):
     """List watched URLs."""
     wf = open(WWF).read().splitlines()
-    _['send']('\n'.join([x.split(' ', 2)[2] for x in wf]))
+    return Message('\n'.join([x.split(' ', 2)[2] for x in wf]), Message.BLOCK)
 
 
 @command('add', __name__, help='Adds an URL to watching list', minRank=2,
@@ -102,17 +103,17 @@ def setInterval(_):
     try:
         val = float(_['T'])
     except:
-        _['send']('Current delay between checks is ' + str(interval) + 's.', 1)
+        return Message('Current delay between checks is ' + str(interval) + 's.')
     else:
         if val < 5 or val > 600:
-            _['send']('Interval must be set between 5 and 600 seconds.', 1)
+            return Message('Interval must be set between 5 and 600 seconds.')
         else:
             interval = val
             with open('data/watcher', 'w') as f:
                 f.write(str(val) + '\n')
                 for channel in channels:
                     f.write(channel + '\n')
-            _['send']('Interval set to ' + str(val) + ' seconds.', 1)
+            return Message('Interval set to ' + str(val) + ' seconds.')
 
 
 def rewrite():
@@ -126,7 +127,7 @@ def rewrite():
 @command('lsch', __name__, minRank=2, help='List output channels.')
 def listChannels(_):
     """List output channels."""
-    _['send'](' '.join(channels), 1)
+    return Message(' '.join(channels))
 
 
 @command('addch', __name__, minRank=2, help='Add output channel.',
@@ -138,11 +139,11 @@ def addChannel(_):
     valid = _['T'] in [c.name for c in serverChannels]
     valid = valid or _['T'] in [c.id for c in serverChannels]
     if not valid:
-        _['send']('Invalid channel name/ID.', 1)
+        return Message('Invalid channel name/ID.')
     else:
         channels.append(_['T'])
         rewrite()
-        _['send']('Channel ' + _['T'] + ' added.', 1)
+        return Message('Channel ' + _['T'] + ' added.')
 
 
 @command('rmch', __name__, minRank=2, help='Remove output channel.',
@@ -151,11 +152,11 @@ def removeChannel(_):
     """Remove a channel from the list of output channels."""
     global channels
     if _['T'] not in channels:
-        _['send']('Invalid channel. Type ;lsch to list output channels.', 1)
+        return Message('Invalid channel. Type ;lsch to list output channels.')
     else:
         channels = [channel for channel in channels if channel != _['T']]
         rewrite()
-        _['send']('Channel ' + _['T'] + ' removed.', 1)
+        return Message('Channel ' + _['T'] + ' removed.')
 
 
 @command('mute', __name__, minRank=2,
@@ -164,9 +165,9 @@ def mute(_):
     """Mute watcher."""
     global silenced
     if silenced:
-        _['send']('Already muted.', 1)
+        return Message('Already muted.')
     else:
-        _['send']('Watcher muted. Type ;unmute to unmute.', 1)
+        return Message('Watcher muted. Type ;unmute to unmute.')
         silenced = True
 
 
@@ -175,10 +176,10 @@ def unmute(_):
     """Unmute watcher."""
     global silenced
     if not silenced:
-        _['send']('Not muted.', 1)
+        return Message('Not muted.')
     else:
         silenced = False
-        _['send']('Watcher unmuted.', 1)
+        return Message('Watcher unmuted.')
 
 
 def start(client):
@@ -192,11 +193,11 @@ def wkill(_):
     """Kill watcher process."""
     global watchout
     watchout = False
-    _['send']('And now his watch is ended.', 1)
+    return Message('And now his watch is ended.')
 
 
 @command('watch', __name__, minRank=3, help='Restart watcher thread.')
 def watch(_):
     """Restart watcher thread."""
     start(_['client'])
-    _['send']('Night gathers, and now my watch begins.', 1)
+    return Message('Night gathers, and now my watch begins.')

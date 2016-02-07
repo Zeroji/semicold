@@ -12,7 +12,7 @@ class Client(discord.Client):
 
     def __init__(self, master='', admins=None):
         """Init client."""
-        discord.Client.__init__(self)
+        super(Client, self).__init__()
         self.running = False
         self.master = master
         self.admins = admins
@@ -24,13 +24,19 @@ class Client(discord.Client):
         """Set the auto-update behavior."""
         self.check_updates = val
 
-    @asyncio.coroutine
+    # @asyncio.coroutine
     def run(self, login, password):
         """Start the client."""
         if self.check_updates:
             self.sources = [f for f in os.listdir('.') if f.endswith('.py')]
             self.last_updated = max([os.stat(f)[8] for f in self.sources])
+        self.running = True
         discord.Client.run(self, login, password)
+    #
+    # @asyncio.coroutine
+    # def on_message(self, message):
+    #     if message.content == 'answer my call':
+    #         yield from self.send_message(message.channel, 'uhm.. hi?')
 
     @asyncio.coroutine
     def on_message(self, message):
@@ -56,7 +62,7 @@ class Client(discord.Client):
             self.running = True
             self.client.send_message(message.channel, '`Bot reloaded.`')
         elif self.running:
-            core.process(self.client, message, self.admins)
+            yield from core.process(self, message, self.admins)
 
     @asyncio.coroutine
     def on_ready(self):
