@@ -94,7 +94,7 @@ class AFKUser:
             self.pm_count += 1
             pmsg = Message('`User ' + message.author.name + ' tried to address you at ' +
                            str((theta // 3600) % 24) + ':' + str((theta // 60) % 60).rjust(2, '0') +
-                           '. Here is their message:`\n' + message.content,
+                           ' GMT. Here is their message:`\n' + message.content,
                            channel=membr, style=Message.PLAIN)
         return msg if pmsg is None else (msg, pmsg)
 
@@ -194,7 +194,7 @@ def afk_setting(_):
                 output.append(Message(message + 'notifications.'))
         elif key in keys[-3:]:
             val = val in ('TRUE', 'True', 'true', 1)
-            user.afk[key] = val
+            user.afk_on[key] = val
             message = 'You will ' + ('' if val else 'not ') + 'be considered '
             message += ('back' if key == 'type' else 'AFK') + ' when you '
             message += {'type': 'send a message.', 'idle': 'are idle.', 'off': 'are offline.'}[key]

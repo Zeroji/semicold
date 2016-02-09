@@ -10,16 +10,15 @@ from cmds import stime          # Had to put it somewhere
 class Client(discord.Client):
     """Wrapper around discord.Client class."""
 
-    def __init__(self, master='', admins=None):
+    def __init__(self, master='', admins=None, playing=None):
         """Init client."""
         super(Client, self).__init__()
         self.running = False
         self.master = master
         self.admins = admins
-        self.check_updates = True
-        self.sources = []
-        self.last_updated = 0
+        self.update = {'check': True, 'sources': [], 'last': 0}
         self._watchlist = ([], [])
+        self.game_name = playing
 
     def watch(self, *user_ids):
         """Add users to watchlist."""
@@ -29,15 +28,15 @@ class Client(discord.Client):
         """Add channels to watcher output."""
         self._watchlist[1].extend(list(channels))
 
-    def update(self, val):
+    def check_updates(self, val):
         """Set the auto-update behavior."""
-        self.check_updates = val
+        self.update['check'] = val
 
     def run(self, login, password):
         """Start the client."""
-        if self.check_updates:
-            self.sources = [f for f in os.listdir('.') if f.endswith('.py')]
-            self.last_updated = max([os.stat(f)[8] for f in self.sources])
+        if self.update['']:
+            self.update['sources'] = [f for f in os.listdir('.') if f.endswith('.py')]
+            self.update['last'] = max([os.stat(f)[8] for f in self.update['sources']])
         self.running = True
         super(Client, self).run(login, password)
 
@@ -70,9 +69,9 @@ class Client(discord.Client):
         """Handle messages from Discord."""
         text, author_id, author = message.content, message.author.id, message.author.name
 
-        if self.check_updates:  # Update check
-            edit_time = max([os.stat(f)[8] for f in self.sources])
-            if edit_time > self.last_updated or (text == 'RLD' and author_id in self.admins):
+        if self.update['check']:  # Update check
+            edit_time = max([os.stat(f)[8] for f in self.update['sources']])
+            if edit_time > self.update['last'] or (text == 'RLD' and author_id in self.admins):
                 print(stime() + ' reloading')
                 os.execl(sys.executable, *([sys.executable]+sys.argv))
 
@@ -95,7 +94,11 @@ class Client(discord.Client):
     def on_ready(self):
         """Initialize bot."""
         # Taking good habits
-        yield from self.change_status(idle=True)
+        game = None
+        if self.game_name:
+            game = discord.Game()
+            game.name = self.game_name
+        yield from super(Client, self).change_status(game=game, idle=True)
         try:
             core.watcher.start(self)
         except AttributeError:
@@ -114,8 +117,7 @@ def main():
     with open('data/admins') as admin_file:
         admins = admin_file.read().splitlines()
 
-    client = Client(master_id, admins)
-    client.play('with StuffBot')
+    client = Client(master_id, admins, playing='with StuffBot')
     client.watch('143120006618677248', '142356131837116417')
     client.watch_output('133648084671528961', '142370164376076288', '142380636915630080')
     client.run(email, passw)

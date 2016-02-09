@@ -196,7 +196,7 @@ def process(client, message, admins):
         if ID in afk_ids:
             user = afk.AFK.get(ID)
             if user and user.is_set() and user.is_afk and user.afk_on['type']:
-                user.back()
+                user.afk(False)
         if '<@' in S and ID != client.user.id:
             for member in afk_ids:
                 if '<@' + member + '>' in S:
