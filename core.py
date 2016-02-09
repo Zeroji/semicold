@@ -9,6 +9,7 @@ import math_
 import string_
 import watcher
 import subprocess
+import afk
 
 prefix = ';'
 moduleNames = {'math_': 'math', 'string_': 'string'}  # Because it's prettier.
@@ -180,6 +181,30 @@ def process(client, message, admins):
     S, ID, A = message.content, message.author.id, message.author.name
     cID = message.channel.id
 
+    def send(output):
+        if output is not None:
+            if type(output) == Message:
+                output = (output,)
+            for mess in output:
+                yield from client.send_message(mess.get_channel(message.author,
+                                               message.channel), mess.text, tts=mess.tts)
+
+    if '<@' in S and ID != client.user.id:
+        print(S)
+        try:
+            afk_ids = afk.AFK.users.keys()
+        except NameError:
+            print("oops")
+            pass
+        else:
+            print(afk_ids)
+            for member in afk_ids:
+                if '<@' + member + '>' in S:
+                    print('hello')
+                    user = afk.AFK.get(member)
+                    if user is not None and user.is_set():
+                        yield from send(user.trigger(message, client))
+
     # Hacking stuff
     transforms = ('asc', 'b64', 'bin', 'dec', 'hex', 'utf')
     if(len(S) > 8 and S[0] == ';' and S[7] == ' ' and
@@ -228,11 +253,6 @@ def process(client, message, admins):
         for c in cmd[C]:
             if not access(c, rank, private, bot, cID):
                 continue
-            output = c[0]({'S': S, 'ID': ID, 'A': A, 'P': P, 'L': L, 'T': T, 'R': R,
-                           'private': private, 'rank': rank, 'cID': cID,
-                           'client': client, 'message': message, 'bot': bot})
-            if type(output) == Message:
-                output = (output,)
-            for mess in output:
-                yield from client.send_message(mess.get_channel(message.author, message.channel),
-                                               mess.text, tts=mess.tts)
+            yield from send(c[0]({'S': S, 'ID': ID, 'A': A, 'P': P, 'L': L, 'T': T, 'R': R,
+                                  'private': private, 'rank': rank, 'cID': cID,
+                                  'client': client, 'message': message, 'bot': bot}))

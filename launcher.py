@@ -54,7 +54,7 @@ class Client(discord.Client):
         elif author_id in self.admins and text == ';reload':
             print(stime() + ' reloaded by ' + author)
             self.running = True
-            self.client.send_message(message.channel, '`Bot reloaded.`')
+            yield from self.client.send_message(message.channel, '`Bot reloaded.`')
         elif self.running:
             yield from core.process(self, message, self.admins)
 
@@ -62,7 +62,7 @@ class Client(discord.Client):
     def on_ready(self):
         """Initialize bot."""
         # Taking good habits
-        self.change_status(None, True)
+        yield from self.change_status(None, True)
         try:
             core.watcher.start(self)
         except AttributeError:
