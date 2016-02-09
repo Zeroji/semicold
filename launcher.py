@@ -34,7 +34,7 @@ class Client(discord.Client):
 
     def run(self, login, password):
         """Start the client."""
-        if self.update['']:
+        if self.update['check']:
             self.update['sources'] = [f for f in os.listdir('.') if f.endswith('.py')]
             self.update['last'] = max([os.stat(f)[8] for f in self.update['sources']])
         self.running = True
