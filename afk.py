@@ -5,6 +5,29 @@ from cmds import command
 from message import Message
 
 
+def alpha(delta):
+    """human-readable formatting of a time difference."""
+    if delta < 1:
+        out = 'a strange amount of time'
+    elif delta < 10:
+        out = 'a few seconds'
+    elif delta < 60:
+        out = str(delta) + ' seconds'
+    elif delta < 120:
+        out = 'one minute'
+    elif delta < 3600:
+        out = str(delta // 60) + ' minutes'
+    elif delta < 7200:
+        out = 'one hour'
+    elif delta < 86400:
+        out = str(delta // 3600) + ' hours'
+    elif delta < 132800:
+        out = 'one day'
+    else:
+        out = str(delta // 86400) + ' days'
+    return out
+
+
 class AFKUser:
     """AFK user."""
 
@@ -18,7 +41,6 @@ class AFKUser:
          self.afk_on['idle'], self.afk_on['off'], self.afk_on['type']) = [int(x) for x in data[:6]]
         self.message['msg'], self.message['afk'], self.message['back'], self.last_seen = data[6:]
         self.last_seen = int(self.last_seen)
-        self.pm_settings = int(self.pm_settings)
 
     def line(self):
         """Return formatted line to save."""
@@ -35,95 +57,70 @@ class AFKUser:
             if member.id == self.user_id:
                 status = member.status
         if self.is_afk:
-            if status == discord.Status.online:
-                if self.afk_on['idle'] or self.afk_on['off']:
-                    self.back()
-            elif status == discord.Status.idle:
-                if not self.afk_on['idle'] or self.afk_on['off']:
-                    self.back()
+            if status == discord.Status.online and (self.afk_on['idle'] or self.afk_on['off']):
+                self.afk(False)
         else:
-            if status == discord.Status.idle:
-                if self.afk_on['idle']:
-                    self.afk()
-            elif status == discord.Status.offline:
-                if self.afk_on['off']:
-                    self.afk()
-        print(self.is_afk)
+            if ((status == discord.Status.idle and self.afk_on['idle']) or
+                    (status == discord.Status.offline and self.afk_on['off'])):
+                self.afk()
 
     def is_set(self):
         """Check if the user settings are correct."""
         return self.pm_count >= 0 and self.message['msg'] != ''
 
-    def afk(self):
-        """Set user as AFK."""
-        self.is_afk = True
-        self.pm_count = 0
-        self.last_seen = int(time())
-
-    def back(self):
-        """Set user as not AFK."""
-        self.is_afk = False
+    def afk(self, away=True):
+        """Set user as AFK (or not)."""
+        self.is_afk = away
+        if away:
+            self.pm_count = 0
+            self.last_seen = int(time())
 
     def trigger(self, message, client):
         """Mention from someone."""
         if not self.is_afk:
             return
+        theta = int(time())
         msg = self.message['msg']
+        membr = None
+        for member in client.get_all_members():
+            if member.id == self.user_id:
+                membr = member
+        msg = msg.replace('%for%', alpha(theta - self.last_seen))
+        msg = msg.replace('%me%', membr.name)
         msg = msg.replace('%mention%', message.author.mention)
-        if '%me%' in msg:
-            for member in client.get_all_members():
-                if member.id == self.user_id:
-                    msg = msg.replace('%me%', member.name)
-        if '%for%' in msg:
-            delta = int(time() - self.last_seen)
-            alpha = 'long'
-            if delta < 1:
-                alpha = 'a strange amount of time'
-            elif delta < 10:
-                alpha = 'a few seconds'
-            elif delta < 60:
-                alpha = str(delta) + ' seconds'
-            elif delta < 120:
-                alpha = 'one minute'
-            elif delta < 3600:
-                alpha = str(delta // 60) + ' minutes'
-            elif delta < 7200:
-                alpha = 'one hour'
-            elif delta < 86400:
-                alpha = str(delta // 3600) + ' hours'
-            elif delta < 132800:
-                alpha = 'one day'
-            else:
-                alpha = str(delta // 86400) + ' days'
-            msg = msg.replace('%for%', alpha)
-        return Message(msg, Message.PLAIN)
-
-
-# Ne faites pas d'enfants, mais pensez à eux quand même
-# Pour une meilleure planète, recyclez vos capotes
+        msg = Message(msg, Message.PLAIN)
+        pmsg = None
+        if self.pm_settings == 0 or self.pm_count < self.pm_settings:
+            self.pm_count += 1
+            pmsg = Message('`User ' + message.author.name + ' tried to address you at ' +
+                           str((theta // 3600) % 24) + ':' + str((theta // 60) % 60).rjust(2, '0') +
+                           '. Here is their message:`\n' + message.content,
+                           channel=membr, style=Message.PLAIN)
+        return msg if pmsg is None else (msg, pmsg)
 
 
 class AFKList:
     """AFK list."""
 
-    def __init__(self):
+    def __init__(self, filename):
         """Initialization."""
         self.users = {}
+        self.filename = filename
 
-    def load(self, filename):
+    def load(self):
         """Load contents from file."""
-        with open(filename, 'r') as afk_file:
+        with open(self.filename, 'r') as afk_file:
             self.users = {}
             for lines in afk_file.read().splitlines():
                 user_id, data = lines.split(':', 1)
                 self.users[user_id] = AFKUser(data, user_id)
 
-    def save(self, filename):
+    def save(self):
         """Save contents to file."""
-        with open(filename, 'w') as afk_file:
-            for user in self.users.keys():
-                afk_file.write(user + ':')
-                afk_file.write(self.users[user].line())
+        with open(self.filename, 'w') as afk_file:
+            for user_id, user in self.users.items():
+                afk_file.write(user_id + ':')
+                afk_file.write(user.line())
                 afk_file.write('\n')
 
     def get(self, user_id):
@@ -131,9 +128,8 @@ class AFKList:
         return self.users[user_id] if user_id in self.users.keys() else None
 
 
-AFK_PATH = 'data/afk'
-AFK = AFKList()
-AFK.load(AFK_PATH)
+AFK = AFKList('data/afk')
+AFK.load()
 
 
 @command('afk', __name__, help='Be afk')
@@ -146,7 +142,7 @@ def enter_afk(_):
                 Message('Type ;afk for more information.', private=True))
     elif not user.is_afk:
         user.afk()
-        AFK.save(AFK_PATH)
+        AFK.save()
         message = user.message['afk']
         if message:
             return Message(message, Message.PLAIN)
@@ -158,8 +154,8 @@ def leave_afk(_):
     user_id = _['message'].author.id
     user = AFK.get(user_id)
     if user is not None and user.is_set() and user.is_afk:
-        user.back()
-        AFK.save(AFK_PATH)
+        user.afk(False)
+        AFK.save()
         message = user.message['back']
         if message:
             return Message(message, Message.PLAIN)
@@ -169,7 +165,6 @@ def leave_afk(_):
          usage='<parameter> <value>')
 def afk_setting(_):
     """Set the AFK parameters."""
-    print('setting')
     user_id = _['message'].author.id
     user = AFK.get(user_id)
     if user is None:
@@ -191,6 +186,7 @@ def afk_setting(_):
                 pass
             else:
                 user.pm_settings = val
+                user.pm_count = 0
                 message = ('You will ' + ('always' if not val else '') +
                            ('never' if val < 0 else '') + ' be sent ')
                 if val > 0:
@@ -206,9 +202,9 @@ def afk_setting(_):
         else:
             val = val.replace('\n', '').replace('http://', '').replace('https://', '')[:200]
             user.message[key] = val
-            message = ('Your ' + {'msg': 'main AFK', 'afk': ';afk', 'back': ';back'}[key] +
-                       ' message has been set to:\n' + val)
-        AFK.save(AFK_PATH)
+            output.append(Message('Your ' + {'msg': 'main AFK', 'afk': 'afk', 'back': 'back'}[key] +
+                                  ' message has been set to:\n' + val))
+        AFK.save()
     else:
         output.append(Message('Use `;afkset <parameter> <value>` to set your preferences. '
                               'Parameters:\n'
