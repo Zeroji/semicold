@@ -128,6 +128,19 @@ command('say', __name__, minRank=1, help='Repeat', usage='<text>')(
     lambda _: Message(_['T'], Message.PLAIN))
 
 
+@command('sayto', __name__, minRank=2, help='Repeat to channel', usage='<#channel> <text>')
+def sayto(_):
+    """Send a message to a specific channel."""
+    chan, message = _['P'][1], _['L'][2]
+    if chan.startswith('<#'):
+        chan = chan[2:-1]
+    output = []
+    for channel in _['client'].get_all_channels():
+        if channel.id == chan:
+            output.append(Message(message, channel=channel, style=Message.PLAIN))
+    return output
+
+
 command('tts', __name__, minRank=1, help='Text-to-speech', usage='<text>')(
     lambda _: Message(_['T'], Message.PLAIN, tts=True))
 

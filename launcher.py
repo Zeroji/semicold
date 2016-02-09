@@ -19,6 +19,15 @@ class Client(discord.Client):
         self.check_updates = True
         self.sources = []
         self.last_updated = 0
+        self._watchlist = ([], [])
+
+    def watch(self, *user_ids):
+        """Add users to watchlist."""
+        self._watchlist[0].extend(list(user_ids))
+
+    def watch_output(self, *channels):
+        """Add channels to watcher output."""
+        self._watchlist[1].extend(list(channels))
 
     def update(self, val):
         """Set the auto-update behavior."""
@@ -31,6 +40,30 @@ class Client(discord.Client):
             self.last_updated = max([os.stat(f)[8] for f in self.sources])
         self.running = True
         super(Client, self).run(login, password)
+
+    @asyncio.coroutine
+    def play(self, game_name):
+        """Change client game."""
+        game = discord.Game
+        game.name = game_name
+        yield from self.change_status(game=game)
+
+    @asyncio.coroutine
+    def on_member_update(self, _, after):
+        """Monitor status updates and change AFK state accordingly. Also watch users."""
+        if after.id in self._watchlist[0]:
+            for channel in self.get_all_channels():
+                if channel.id in self._watchlist[1]:
+                    print(channel.name, after.name, _.status.name, after.status.name)
+                    yield from self.send_message(channel, ('`Status update: ' + after.name +
+                                                           ' went ' + after.status.name + '`'))
+        try:
+            user = core.afk.AFK.get(after.id)
+        except AttributeError:
+            pass
+        else:
+            if user and user.is_set():
+                user.check(self)
 
     @asyncio.coroutine
     def on_message(self, message):
@@ -54,7 +87,7 @@ class Client(discord.Client):
         elif author_id in self.admins and text == ';reload':
             print(stime() + ' reloaded by ' + author)
             self.running = True
-            yield from self.client.send_message(message.channel, '`Bot reloaded.`')
+            yield from self.send_message(message.channel, '`Bot reloaded.`')
         elif self.running:
             yield from core.process(self, message, self.admins)
 
@@ -62,7 +95,7 @@ class Client(discord.Client):
     def on_ready(self):
         """Initialize bot."""
         # Taking good habits
-        yield from self.change_status(None, True)
+        yield from self.change_status(idle=True)
         try:
             core.watcher.start(self)
         except AttributeError:
@@ -82,6 +115,9 @@ def main():
         admins = admin_file.read().splitlines()
 
     client = Client(master_id, admins)
+    client.play('with StuffBot')
+    client.watch('143120006618677248', '142356131837116417')
+    client.watch_output('133648084671528961', '142370164376076288', '142380636915630080')
     client.run(email, passw)
 
 if __name__ == '__main__':

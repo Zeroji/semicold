@@ -65,7 +65,7 @@ def report(_):
             pass
 
 
-def access(c, rank=0, chan='', private=False, bot=False):
+def access(c, rank=0, private=False, bot=False, chan=''):
     """Tell if one can use a command."""
     if rank < c['minRank']:
         return False
@@ -188,19 +188,18 @@ def process(client, message, admins):
             for mess in output:
                 yield from client.send_message(mess.get_channel(message.author,
                                                message.channel), mess.text, tts=mess.tts)
-
-    if '<@' in S and ID != client.user.id:
-        print(S)
-        try:
-            afk_ids = afk.AFK.users.keys()
-        except NameError:
-            print("oops")
-            pass
-        else:
-            print(afk_ids)
+    try:
+        afk_ids = afk.AFK.users.keys()
+    except NameError:
+        pass
+    else:
+        if ID in afk_ids:
+            user = afk.AFK.get(ID)
+            if user and user.is_set() and user.is_afk and user.afk_on['type']:
+                user.back()
+        if '<@' in S and ID != client.user.id:
             for member in afk_ids:
                 if '<@' + member + '>' in S:
-                    print('hello')
                     user = afk.AFK.get(member)
                     if user is not None and user.is_set():
                         yield from send(user.trigger(message, client))
@@ -248,7 +247,6 @@ def process(client, message, admins):
 # def command(name, minRank=0, maxRank=None, private=True, privateOnly=False,
 #             channelBlackList=None, channelWhiteList=None, help='', usage='',
 #             botsAllowed=True, reversible=False):
-    # if '<@' in S: # afk
     if C in cmd.keys():
         for c in cmd[C]:
             if not access(c, rank, private, bot, cID):
