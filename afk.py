@@ -139,7 +139,7 @@ def enter_afk(_):
     user = AFK.get(user_id)
     if user is None or not user.is_set():
         return (Message('Please set your afk parameters through PM.'),
-                Message('Type ;afk for more information.', private=True))
+                Message('Type ;afkset for more information.', private=True))
     elif not user.is_afk:
         user.afk()
         AFK.save()
