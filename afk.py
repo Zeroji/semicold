@@ -148,7 +148,7 @@ def enter_afk(_):
         AFK.save()
         message = user.message['afk']
         if message:
-            return Message(message, Message.PLAIN)
+            return Message(message.replace('%me%', _['A']), Message.PLAIN)
 
 
 @command('back', __name__, help='Be back', hidden=True)
@@ -161,7 +161,7 @@ def leave_afk(_):
         AFK.save()
         message = user.message['back']
         if message:
-            return Message(message, Message.PLAIN)
+            return Message(message.replace('%me%', _['A']), Message.PLAIN)
 
 
 @command('afkset', __name__, help='Set your AFK parameters', privateOnly=True,
@@ -171,12 +171,12 @@ def afk_setting(_):
     user_id = _['message'].author.id
     user = AFK.get(user_id)
     if user is None:
-        user = AFKUser('0{~}0{~}1{~}0{~}0{~}unset{~}{~}', user_id)
+        user = AFKUser('0{~}0{~}1{~}0{~}0{~}0{~}unset{~}{~}{~}-1', user_id)
         AFK.users[user_id] = user
     was_set = user.is_set()
     output = []
 
-    keys = ('msg', 'afk', 'back', 'pms', 'idle', 'off', 'type')
+    keys = ('msg', 'afk', 'back', 'pm', 'idle', 'off', 'type')
     if len(_['P']) >= 3 and _['P'][1] in keys:
         key = _['P'][1]
         val = _['L'][2]
@@ -221,7 +221,7 @@ def afk_setting(_):
                               Message.BLOCK))
         output.append(Message('Messages can be at most 200 characters long, and cannot contain '
                               'newlines or links. You can use `%mention%` to mention who talked '
-                              'to you, %me% to insert your name and `%for%` to tell for how long '
+                              'to you, `%me%` to insert your name and `%for%` to tell for how long '
                               'you are AFK. (like "2 hours")',
                               Message.PLAIN))
 
