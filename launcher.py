@@ -117,7 +117,7 @@ def main():
     with open('data/admins') as admin_file:
         admins = admin_file.read().splitlines()
 
-    client = Client(master_id, admins, playing='with StuffBot')
+    client = Client(master_id, admins, playing=None)
     client.watch('143120006618677248', '142356131837116417')
     client.watch_output('133648084671528961', '142370164376076288', '142380636915630080')
     client.run(email, passw)

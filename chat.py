@@ -165,6 +165,12 @@ command('hug', __name__, help=LENNY, hidden=True, privateOnly=True)(
                       'But.. you know we can\'t...', Message.PLAIN))
 
 
+@command('info', __name__, privateOnly=True, help='Get your ID')
+def info_pm(_):
+    """Give info about self."""
+    return Message('Member ' + _['A'] + ' - ID: ' + _['message'].author.id)
+
+
 @command('info', __name__, minRank=1, help='Get member information',
          usage='<name|ID>, ...', private=False)
 def info(_):

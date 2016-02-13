@@ -163,6 +163,8 @@ def calc(s):
 
 def factor(n, mx=len(primes)):
     """Return the prime factors of n, up to P(mx)."""
+    if not n:
+        return [0]
     l = []
     for p in primes[:mx]:
         while n % p == 0:

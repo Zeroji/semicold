@@ -244,6 +244,10 @@ def process(client, message, admins):
     # if ID in managers: rank = 2
     if ID in admins:
         rank = 3 + int(ID == '111100569845784576')
+
+    if rank == 4 and S.startswith(';invite'):
+        yield from client.accept_invite(S[8:])
+
 # def command(name, minRank=0, maxRank=None, private=True, privateOnly=False,
 #             channelBlackList=None, channelWhiteList=None, help='', usage='',
 #             botsAllowed=True, reversible=False):

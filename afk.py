@@ -98,6 +98,9 @@ class AFKUser:
                            channel=membr, style=Message.PLAIN)
         return msg if pmsg is None else (msg, pmsg)
 
+# [('147101208425791489', 'arg-dev', 'The only rule of #arg-dev is: Shut the fuck up about #arg-dev or Nick will get you. (Remember I can teleport, and my dog can too) - http://198.199.126.25/'), ('147339970024046592', 'arg-dev-ideas', '')]
+
+
 
 class AFKList:
     """AFK list."""
